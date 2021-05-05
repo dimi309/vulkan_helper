@@ -1,0 +1,33 @@
+cmake_minimum_required(VERSION 3.0.2)
+
+project(vkzos C)
+
+# if(IOS AND DEFINED ANDROID_PLATFORM)
+#   message(FATAL_ERROR "Variables defined for both iOS and Android (IOS is set and ANDROID_PLATFORM exists)")
+# endif()
+
+# if(IOS)
+#   add_compile_definitions(VKZOS_IOS)
+# endif()
+
+file(COPY "include" DESTINATION ".")
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+
+if(MSVC)
+  add_definitions("-D_CRT_SECURE_NO_WARNINGS")
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${PROJECT_BINARY_DIR}/bin")
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/bin")
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG "${PROJECT_BINARY_DIR}/lib")
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/lib")
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${PROJECT_BINARY_DIR}/lib")
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/lib")
+endif()
+
+# if(NOT IOS) # Linking to MoltenVK explicitly on iOS
+find_package(Vulkan REQUIRED)
+# endif()
+
+subdirs(src)

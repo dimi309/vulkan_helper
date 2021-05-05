@@ -1,0 +1,21 @@
+#Backup files
+*\~
+*swp
+*blend[0-9]
+*\.bak
+
+#MacOS
+Thumbs.db
+.DS_Store
+
+#Emacs buffers
+\#*\#
+\.\#*
+
+/\.idea
+/\.vs
+
+/build
+/_build
+/Win32
+/bin
