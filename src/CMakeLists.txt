@@ -9,7 +9,11 @@ target_include_directories(vkzos PUBLIC ${Vulkan_INCLUDE_DIRS} ${CMAKE_SOURCE_DI
 
 target_link_libraries(vkzos PUBLIC ${Vulkan_LIBRARIES})
 
-add_executable(unittests unit_tests.c)
+if(MSVC)
+  add_executable(unittests WIN32 unit_tests.c)
+else()
+  add_executable(unittests WIN32 unit_tests.c)
+endif()
 
 target_include_directories(unittests PUBLIC ${CMAKE_SOURCE_DIR}/include)
 

@@ -26,25 +26,21 @@ struct android_app* vkz_android_app;
 #define LOGDEBUG1(x, y) __android_log_print(ANDROID_LOG_DEBUG, "vkzos", x, y)
 #define LOGDEBUG2(x, y, z) __android_log_print(ANDROID_LOG_DEBUG, "vkzos", x, y, z)
 
-uint32_t numValidationLayers = 5;
-const char* vl[5] = {
-  "VK_LAYER_GOOGLE_threading",
-  "VK_LAYER_LUNARG_parameter_validation",
-  "VK_LAYER_LUNARG_object_tracker",
-  "VK_LAYER_LUNARG_core_validation",
-  "VK_LAYER_GOOGLE_unique_objects"
-};
-
 #else
 
 #define LOGDEBUG0(x) printf(x); printf("\n\r")
 #define LOGDEBUG1(x, y) printf(x, y); printf("\n\r")
 #define LOGDEBUG2(x, y, z) printf(x, y, z); printf("\n\r")
 
-uint32_t numValidationLayers = 1;
-const char* vl[1] = { "VK_LAYER_LUNARG_standard_validation" };
-
 #endif
+
+uint32_t numValidationLayers = 3; // Set to 4 to enable VK_LAYER_MESA_overlay
+const char* vl[4] = {
+  "VK_LAYER_LUNARG_standard_validation",
+  "VK_LAYER_MESA_device_select",
+  "VK_LAYER_KHRONOS_validation",
+  "VK_LAYER_MESA_overlay"
+};
 
 #else
 #define LOGDEBUG0(x)
@@ -72,8 +68,11 @@ debugCallback(VkDebugReportFlagsEXT flags,
 
 static VkDebugReportCallbackEXT callback;
 
+static BOOL VK_KHR_get_physical_device_properties2_supported = FALSE;
+
+static BOOL VK_KHR_portability_subset_supported = FALSE;
+
 static BOOL debug_callback_created = FALSE;
-static BOOL validation_layer_ok = FALSE;
 static BOOL instance_created = FALSE;
 static BOOL logical_device_created = FALSE;
 
@@ -127,13 +126,12 @@ static VkFormat depth_image_format;
 static VkDeviceMemory depth_image_memory;
 static VkImageView depth_image_view;
 
-static int intrn_with_image_sampler = 0;
-
 static uint32_t next_image_index;
 
 VkPipelineLayout* vkz_pipeline_layout;
 
 typedef struct {
+  BOOL deleted;
   char* vertex_shader_path;
   char* fragment_shader_path;
   VkShaderModule vertex_shader_module;
@@ -146,8 +144,21 @@ typedef struct {
 uint32_t pipeline_system_count = 0;
 pipeline_system_struct* pipeline_systems = NULL;
 
-static VkFence gpu_cpu_fence;
-static VkSemaphore draw_semaphore, acquire_semaphore;
+static VkFence gpu_cpu_fence = VK_NULL_HANDLE;
+static VkSemaphore draw_semaphore = VK_NULL_HANDLE, acquire_semaphore = VK_NULL_HANDLE;
+
+
+void wait_gpu_cpu_fence() {
+  if (gpu_cpu_fence == VK_NULL_HANDLE) {
+    LOGDEBUG0("Waiting on gpu_cpu_fence that is null!");
+  }
+  VkResult rwait;
+  do {
+    rwait = vkWaitForFences(vkz_logical_device, 1,
+      &gpu_cpu_fence,
+      VK_TRUE, UINT64_MAX);
+  } while (rwait == VK_TIMEOUT);
+}
 
 int vkz_create_instance(const char* application_name,
   const char** enabled_extension_names,
@@ -157,6 +168,40 @@ int vkz_create_instance(const char* application_name,
   for (int i = 0; i < enabled_extension_count; ++i) {
     LOGDEBUG1("%s", enabled_extension_names[i]);
   }
+
+  uint32_t property_count = 0;
+
+  vkEnumerateInstanceExtensionProperties(NULL, &property_count,
+    NULL);
+  if (property_count > 0) {
+    VkExtensionProperties* extension_properties = malloc(sizeof(VkExtensionProperties) * property_count);
+
+    vkEnumerateInstanceExtensionProperties(NULL, &property_count,
+      extension_properties);
+    LOGDEBUG0("Checking for requested extension support...");
+    for (uint32_t i1 = 0; i1 < enabled_extension_count; ++i1) {
+      BOOL ext_found = FALSE;
+      for (uint32_t i = 0; i < property_count; ++i) {
+        if (strcmp(enabled_extension_names[i1], extension_properties[i].extensionName) == 0) {
+          ext_found = TRUE;
+        }
+      }
+      if (!ext_found) {
+        LOGDEBUG1("%s not supported! Cannot create Vulkan instance.", enabled_extension_names[i1]);
+        return 0;
+      }
+    }
+
+    VK_KHR_get_physical_device_properties2_supported = FALSE;
+    LOGDEBUG0("Searching through instance supported extensions...");
+    for (uint32_t i = 0; i < property_count; ++i) {
+      if (strcmp("VK_KHR_get_physical_device_properties2", extension_properties[i].extensionName) == 0) {
+        VK_KHR_get_physical_device_properties2_supported = TRUE;
+      }
+    }
+    free(extension_properties);
+  }
+
 
   VkApplicationInfo ai;
   memset(&ai, 0, sizeof(VkApplicationInfo));
@@ -183,7 +228,8 @@ int vkz_create_instance(const char* application_name,
     memset(lp, 0, sizeof(VkLayerProperties) * lc);
     vkEnumerateInstanceLayerProperties(&lc, lp);
     for (uint32_t i = 0; i < numValidationLayers; i++) {
-      for (uint32_t n = 0; n < lc; ++n) {
+      LOGDEBUG1("Looking for %s", vl[i]);
+      for (uint32_t n = 0; n < lc; ++n) {      
         // Disable C6385 warning in Visual Studio as it probably gives a false positive here.
         // see https://stackoverflow.com/questions/59649678/warning-c6385-in-visual-studio
 #pragma warning(push)
@@ -197,29 +243,40 @@ int vkz_create_instance(const char* application_name,
       }
     }
   }
+  if (validation_layer_count == 0) {
+    LOGDEBUG0("No validation layers found.");
+  }
 
   ci.enabledExtensionCount = (uint32_t)enabled_extension_count;
   ci.ppEnabledExtensionNames = enabled_extension_names;
 
   // This would normally be enabled_extension_count + 1 but Visual
   // Studio doesn't like such qualifiers
-  const char* allExtensionNames[5];
+  const char* allExtensionNames[10];
+  uint32_t allExtensionCount = (uint32_t)enabled_extension_count;
+
+  for (uint32_t n = 0; n < enabled_extension_count; n++) {
+    allExtensionNames[n] = enabled_extension_names[n];
+  }
+
+  if (VK_KHR_get_physical_device_properties2_supported) {
+    allExtensionNames[allExtensionCount] = "VK_KHR_get_physical_device_properties2";
+    ++allExtensionCount;
+  }
 
   if (validation_layer_count > 0) {
 
     ci.enabledLayerCount = validation_layer_count;
     ci.ppEnabledLayerNames = validation_layers;
 
-    for (uint32_t n = 0; n < enabled_extension_count; n++) {
-      allExtensionNames[n] = enabled_extension_names[n];
-    }
-
-    allExtensionNames[enabled_extension_count] =
+    allExtensionNames[allExtensionCount] =
       VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
-    uint32_t allExtensionCount = (uint32_t)enabled_extension_count + 1;
-    ci.enabledExtensionCount = allExtensionCount;
-    ci.ppEnabledExtensionNames = allExtensionNames;
+    ++allExtensionCount;
+
   }
+
+  ci.enabledExtensionCount = allExtensionCount;
+  ci.ppEnabledExtensionNames = allExtensionNames;
 
 #else
   ci.enabledExtensionCount = enabled_extension_count;
@@ -242,6 +299,7 @@ int vkz_create_instance(const char* application_name,
       dcci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT |
         VK_DEBUG_REPORT_WARNING_BIT_EXT;
       dcci.pfnCallback = debugCallback;
+      dcci.pNext = NULL;
 
       PFN_vkCreateDebugReportCallbackEXT dcCreate =
         (PFN_vkCreateDebugReportCallbackEXT)
@@ -478,9 +536,16 @@ int select_physical_device() {
 
         success = select_surface_format() && select_present_mode();
 
+        VK_KHR_portability_subset_supported = FALSE;
+        LOGDEBUG0("Searching through extensions supported by physical device...");
+        for (uint32_t n1 = 0; n1 < deviceExtensionCount; n1++) {
+          if (strcmp("VK_KHR_portability_subset", deviceExtensions[n1].extensionName) == 0) {
+            VK_KHR_portability_subset_supported = TRUE;
+            LOGDEBUG0("The device supports the VK_KHR_portability_subset extension. It will be enabled.");
+          }
+        }
         break;
       }
-
     }
   }
 
@@ -592,13 +657,23 @@ int create_logical_device() {
   dci.queueCreateInfoCount = vkz_graphics_family_index ==
     vkz_present_family_index ? 1 : 2;
   dci.pEnabledFeatures = &pdf;
-  dci.enabledExtensionCount = 1;
-  const char* device_extensions[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-  dci.ppEnabledExtensionNames = (const char* const*)device_extensions;
+
+  const char* device_extensions1[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+  const char* device_extensions2[] = { "VK_KHR_portability_subset", VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
+  if (VK_KHR_portability_subset_supported) {
+    LOGDEBUG0("Enabling VK_KHR_portability_subset");
+    dci.ppEnabledExtensionNames = (const char* const*)device_extensions2;
+    dci.enabledExtensionCount = 3;
+  }
+  else {
+    dci.ppEnabledExtensionNames = (const char* const*)device_extensions1;
+    dci.enabledExtensionCount = 1;
+  }
 
 #ifndef NDEBUG
 
-  if (validation_layer_ok) {
+  if (validation_layer_count > 0) {
     dci.enabledLayerCount = validation_layer_count;
     dci.ppEnabledLayerNames = validation_layers;
   }
@@ -633,7 +708,7 @@ int create_logical_device() {
   return logical_device_created;
 }
 
-int vkz_create_depth_image(void) {
+int create_depth_image(void) {
 
   VkFormat candidate_formats[3];
   candidate_formats[0] = VK_FORMAT_D32_SFLOAT;
@@ -676,7 +751,7 @@ int vkz_create_depth_image(void) {
     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 }
 
-int vkz_destroy_depth_image(void) {
+int destroy_depth_image(void) {
   vkDestroyImageView(vkz_logical_device, depth_image_view, NULL);
   vkDestroyImage(vkz_logical_device, depth_image, NULL);
   vkFreeMemory(vkz_logical_device, depth_image_memory, NULL);
@@ -896,12 +971,8 @@ int vkz_set_width_height(const uint32_t width, const uint32_t height) {
   return 1;
 }
 
-int vkz_create_swapchain(int with_image_sampler) {
+int vkz_create_swapchain() {
   select_swap_extent();
-
-  if (with_image_sampler != -1) {
-    intrn_with_image_sampler = with_image_sampler;
-  }
 
   uint32_t ic = vkz_swapchain_support_details.capabilities.minImageCount;
   if (vkz_swapchain_support_details.capabilities.maxImageCount >= 3) {
@@ -951,7 +1022,7 @@ int vkz_create_swapchain(int with_image_sampler) {
     VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
     VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR,
     VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
-  };
+};
 
   for (uint32_t i = 0; i < sizeof(af); i++) {
     if (vkz_swapchain_support_details.capabilities.supportedCompositeAlpha &
@@ -984,17 +1055,11 @@ int vkz_create_swapchain(int with_image_sampler) {
     &vkz_swapchain_image_count,
     vkz_swapchain_images);
 
-  return create_swapchain_image_views() && vkz_create_depth_image() &&
+  return create_swapchain_image_views() && create_depth_image() &&
     create_render_pass() && create_framebuffers(render_pass);
 }
 
 int vkz_destroy_swapchain(void) {
-
-  // This function sometimes produced the error
-  // "Thread 1: EXC_BAD_ACCESS (code=1, address=0x150)"
-  // during the execution of the command vkDestroySwapchainKHR
-  // on MacOS. Adding the vkDeviceWaitIdle command seems to have
-  // fixed it.
 
   vkDeviceWaitIdle(vkz_logical_device);
 
@@ -1004,7 +1069,7 @@ int vkz_destroy_swapchain(void) {
   }
   free(framebuffers);
 
-  vkz_destroy_depth_image();
+  destroy_depth_image();
 
   vkDestroyRenderPass(vkz_logical_device,
     render_pass, NULL);
@@ -1025,6 +1090,7 @@ int vkz_destroy_swapchain(void) {
   if (swapchain_created) {
     vkDestroySwapchainKHR(vkz_logical_device, vkz_swapchain, NULL);
     swapchain_created = FALSE;
+    vkz_swapchain = VK_NULL_HANDLE;
 
   }
   return 1;
@@ -1109,12 +1175,19 @@ int vkz_create_pipeline(const char* vertex_shader_path, const char* fragment_sha
         pipeline_systems[*index].set_input_state_function = set_input_state;
         pipeline_systems[*index].set_pipeline_layout_function =
           set_pipeline_layout;
+        pipeline_systems[*index].deleted = FALSE;
       }
       else {
         // Reuse existing slot
 
         if (*index >= pipeline_system_count) {
           LOGDEBUG1("Pipeline %d has ever been created! Cannot reuse index!",
+            *index);
+          return 0;
+        }
+
+        if (pipeline_systems[*index].deleted == FALSE) {
+          LOGDEBUG1("Pipeline %d has not been deleted! Cannot reuse index!",
             *index);
           return 0;
         }
@@ -1126,10 +1199,26 @@ int vkz_create_pipeline(const char* vertex_shader_path, const char* fragment_sha
         int (*spl)(VkPipelineLayoutCreateInfo*) =
           pipeline_systems[*index].set_pipeline_layout_function;
         memset(&pipeline_systems[*index], 0, sizeof(pipeline_system_struct));
-        pipeline_systems[*index].vertex_shader_path = vsp;
-        pipeline_systems[*index].fragment_shader_path = fsp;
+        if (!vsp && vertex_shader_path) {
+          size_t path_length = strchr(vertex_shader_path, '\0') - vertex_shader_path + 1;
+          pipeline_systems[*index].vertex_shader_path = malloc(path_length);
+          strcpy(pipeline_systems[*index].vertex_shader_path, (char*)vertex_shader_path);
+        }
+        else {
+          pipeline_systems[*index].vertex_shader_path = vsp;
+        }
+        if (!fsp && vertex_shader_path) {
+          size_t path_length = strchr(fragment_shader_path, '\0') - fragment_shader_path + 1;
+          pipeline_systems[*index].fragment_shader_path = malloc(path_length);
+          strcpy(pipeline_systems[*index].fragment_shader_path, (char*)fragment_shader_path);
+        }
+        else {
+          pipeline_systems[*index].fragment_shader_path = fsp;
+        }
+
         pipeline_systems[*index].set_input_state_function = sis;
         pipeline_systems[*index].set_pipeline_layout_function = spl;
+        pipeline_systems[*index].deleted = FALSE;
       }
     }
     else {
@@ -1164,6 +1253,7 @@ int vkz_create_pipeline(const char* vertex_shader_path, const char* fragment_sha
 
     pipeline_systems[*index].set_input_state_function = set_input_state;
     pipeline_systems[*index].set_pipeline_layout_function = set_pipeline_layout;
+    pipeline_systems[*index].deleted = FALSE;
   }
 
   VkShaderModuleCreateInfo ci;
@@ -1423,9 +1513,18 @@ int destroy_pipeline(uint32_t index, BOOL free_shader_path_strings) {
   if (free_shader_path_strings) {
     free(pipeline_systems[index].vertex_shader_path);
     free(pipeline_systems[index].fragment_shader_path);
+    pipeline_systems[index].vertex_shader_path = NULL;
+    pipeline_systems[index].fragment_shader_path = NULL;
   }
 
+  pipeline_systems[index].deleted = TRUE;
+
   return 1;
+}
+
+int vkz_destroy_pipeline(uint32_t index) {
+  if (pipeline_systems[index].deleted) return 1;
+  return destroy_pipeline(index, FALSE);
 }
 
 int vkz_begin_draw_command_buffer(VkCommandBuffer* command_buffer) {
@@ -1509,13 +1608,6 @@ int vkz_end_draw_command_buffer(VkCommandBuffer* command_buffer) {
 
 int vkz_destroy_draw_command_buffer(VkCommandBuffer* command_buffer) {
 
-  VkResult rwait;
-  do {
-    rwait = vkWaitForFences(vkz_logical_device, 1,
-      &gpu_cpu_fence,
-      VK_TRUE, UINT64_MAX);
-  } while (rwait == VK_TIMEOUT);
-
   vkFreeCommandBuffers(vkz_logical_device, command_pool, 1, command_buffer);
 
   return 1;
@@ -1561,20 +1653,15 @@ int vkz_create_sync_objects(void) {
 
 int vkz_destroy_sync_objects(void) {
 
-  VkResult rwait;
-  do {
-    rwait = vkWaitForFences(vkz_logical_device, 1,
-      &gpu_cpu_fence,
-      VK_TRUE, UINT64_MAX);
-  } while (rwait == VK_TIMEOUT);
-
   vkDestroyFence(vkz_logical_device,
     gpu_cpu_fence, NULL);
-
+  gpu_cpu_fence = VK_NULL_HANDLE;
   vkDestroySemaphore(vkz_logical_device,
     draw_semaphore, NULL);
+  draw_semaphore = VK_NULL_HANDLE;
   vkDestroySemaphore(vkz_logical_device,
     acquire_semaphore, NULL);
+  acquire_semaphore = VK_NULL_HANDLE;
 
   return 1;
 }
@@ -1587,7 +1674,7 @@ int vkz_recreate_pipelines_and_swapchain(void) {
   }
 
   vkz_destroy_swapchain();
-  vkz_create_swapchain(-1);
+  vkz_create_swapchain();
   for (uint32_t i = 0; i < pipeline_system_count; ++i) {
     vkz_create_pipeline(NULL, NULL, NULL, NULL, &i);
   }
@@ -1666,6 +1753,9 @@ int vkz_draw(VkCommandBuffer* command_buffer) {
     gpu_cpu_fence) != VK_SUCCESS) {
     LOGDEBUG0("Could not submit draw command buffer!");
   }
+  // That's right, we're waiting for the gpu :/ - sacrificing performance (sometimes)
+  // for writing less code :)
+  wait_gpu_cpu_fence();
 
   return 1;
 }
@@ -1762,9 +1852,12 @@ int end_single_time_commands(VkCommandBuffer command_buffer) {
   si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   si.commandBufferCount = 1;
   si.pCommandBuffers = &command_buffer;
-  vkQueueSubmit(vkz_graphics_queue, 1, &si, VK_NULL_HANDLE);
 
-  vkQueueWaitIdle(vkz_graphics_queue);
+  vkResetFences(vkz_logical_device, 1,
+    &gpu_cpu_fence);
+  vkQueueSubmit(vkz_graphics_queue, 1, &si, gpu_cpu_fence);
+
+  wait_gpu_cpu_fence();
 
   vkFreeCommandBuffers(vkz_logical_device,
     command_pool,
@@ -1838,8 +1931,17 @@ int vkz_create_image(VkImage* image,
 }
 
 int vkz_destroy_image(VkImage image, VkDeviceMemory image_memory) {
-  vkDestroyImage(vkz_logical_device, image, NULL);
-  vkFreeMemory(vkz_logical_device, image_memory, NULL);
+
+  if (image != VK_NULL_HANDLE) {
+    vkDestroyImage(vkz_logical_device, image, NULL);
+    image = VK_NULL_HANDLE;
+  }
+
+  if (image_memory != VK_NULL_HANDLE) {
+    vkFreeMemory(vkz_logical_device, image_memory, NULL);
+    image_memory = VK_NULL_HANDLE;
+  }
+
   return 1;
 }
 
@@ -1960,6 +2062,7 @@ int vkz_create_sampler(VkSampler* sampler) {
   sci.mipLodBias = 0.0f;
   sci.minLod = 0.0f;
   sci.maxLod = 0.0f;
+  sci.compareEnable = VK_TRUE;
   if (vkCreateSampler(vkz_logical_device, &sci, NULL, sampler) != VK_SUCCESS) {
     return 0;
   }
@@ -1975,7 +2078,9 @@ int vkz_shutdown(void) {
   if (pipeline_systems) {
 
     for (uint32_t n = 0; n < pipeline_system_count; ++n) {
-      destroy_pipeline(n, TRUE);
+      if (!pipeline_systems[n].deleted) {
+        destroy_pipeline(n, TRUE);
+      }
     }
 
     free(pipeline_systems);

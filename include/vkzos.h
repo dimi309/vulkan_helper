@@ -16,7 +16,7 @@
 extern struct android_app *vkz_android_app;
 #endif
 
-#ifdef SMALL3D_IOS
+#ifdef VKZOS_IOS
 #include <MoltenVK/mvk_vulkan.h>
 #else
 #include <vulkan/vulkan.h>
@@ -86,29 +86,15 @@ int vkz_set_width_height(const uint32_t width, const uint32_t height);
 /**
  * @brief Create the swapchain that will be used. This will also create
  * the associated image views.
- * @param with_image_sampler 1 If an image sampler will be used, 0 otherwise.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_create_swapchain(int with_image_sampler);
+int vkz_create_swapchain();
 
 /**
  * @brief Destroy the swapchain.
  * @return 1 if successful, 0 otherwise
  */
 int vkz_destroy_swapchain(void);
-
-/**
- * @brief Create the image used for depth testing. This function must be called
- *        right after vkz_create_swapchain(). 
- * @return 1 if successful, 0 otherwise
- */
-int vkz_create_depth_image(void);
-
-/**
- * @brief Destroy the image used for depth testing.
- * @return 1 if successful, 0 otherwise
- */
-int vkz_destroy_depth_image(void);
 
 /**
  * @brief Create a pipeline. This will also create associated Vulkan
@@ -140,6 +126,12 @@ int vkz_destroy_depth_image(void);
 int vkz_create_pipeline(const char* vertex_shader_path, const char* fragment_shader_path,
   int (*set_input_state)(VkPipelineVertexInputStateCreateInfo*),
   int (*set_pipeline_layout)(VkPipelineLayoutCreateInfo*), uint32_t* index);
+
+/**
+ * @brief Destroy a pipeline
+ * @param index The index of the pipeline to destroy
+ */
+int vkz_destroy_pipeline(uint32_t index);
 
 /**
  * @brief Begin creating a drawing command buffer 

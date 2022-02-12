@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.0.2)
 
 project(vkzos C)
 
-# if(IOS AND DEFINED ANDROID_PLATFORM)
-#   message(FATAL_ERROR "Variables defined for both iOS and Android (IOS is set and ANDROID_PLATFORM exists)")
-# endif()
+if(IOS AND DEFINED ANDROID_PLATFORM)
+  message(FATAL_ERROR "Variables defined for both iOS and Android (IOS is set and ANDROID_PLATFORM exists)")
+endif()
 
-# if(IOS)
-#   add_compile_definitions(VKZOS_IOS)
-# endif()
+if(IOS)
+  add_compile_definitions(VKZOS_IOS)
+endif()
 
 file(COPY "include" DESTINATION ".")
 
