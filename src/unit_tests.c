@@ -7,6 +7,8 @@
 #include <vkzos.h>
 #include <assert.h>
 
+#include <vulkan\vulkan_win32.h>
+
 #ifdef _MSC_VER
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -61,6 +63,13 @@ int CALLBACK wWinMain(
   _In_ int nShowCmd
 ) {
 
+  if (!vkz_create_instance("title", NULL, 0)) {
+    MessageBox(NULL, "Failed to initialise Vulkan", "Error", MB_OK);
+  }
+  else {
+    MessageBox(NULL, "Vulkan initialised ok", "Info", MB_OK);
+  }
+
   WNDCLASSEXW windowClass;
   memset(&windowClass, 0, sizeof(WNDCLASSEXW));
   windowClass.cbSize = sizeof(WNDCLASSEX);
@@ -97,6 +106,20 @@ int CALLBACK wWinMain(
 
   HWND hWnd = CreateWindowExW(NULL, L"small3d unit tests", L"small3d unit tests", WS_OVERLAPPEDWINDOW, windowX, windowY,
     windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
+
+  VkWin32SurfaceCreateInfoKHR createInfo;
+  memset(&createInfo, 0, sizeof(VkWin32SurfaceCreateInfoKHR));
+  createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+  createInfo.pNext = NULL;
+  createInfo.hinstance = hInstance;
+  createInfo.hwnd = hWnd;
+  if (!vkCreateWin32SurfaceKHR(vkz_instance, &createInfo, NULL, &vkz_surface)) {
+    MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
+    return 1;
+  }
+  else {
+    MessageBox(NULL, "Created Vulkan surface", "Info", MB_OK);
+  }
 
   ShowWindow(hWnd, SW_SHOW);
 
