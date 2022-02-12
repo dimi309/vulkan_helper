@@ -63,12 +63,21 @@ int CALLBACK wWinMain(
   _In_ int nShowCmd
 ) {
 
-  if (!vkz_create_instance("title", NULL, 0)) {
+  const char* const extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+
+  if (!vkz_create_instance("title", extensions, 2)) {
     MessageBox(NULL, "Failed to initialise Vulkan", "Error", MB_OK);
   }
   else {
     MessageBox(NULL, "Vulkan initialised ok", "Info", MB_OK);
   }
+
+  /*if (!vkz_create_instance("title", NULL, 0)) {
+    MessageBox(NULL, "Failed to initialise Vulkan", "Error", MB_OK);
+  }
+  else {
+    MessageBox(NULL, "Vulkan initialised ok", "Info", MB_OK);
+  }*/
 
   WNDCLASSEXW windowClass;
   memset(&windowClass, 0, sizeof(WNDCLASSEXW));
@@ -113,7 +122,7 @@ int CALLBACK wWinMain(
   createInfo.pNext = NULL;
   createInfo.hinstance = hInstance;
   createInfo.hwnd = hWnd;
-  if (!vkCreateWin32SurfaceKHR(vkz_instance, &createInfo, NULL, &vkz_surface)) {
+  if (vkCreateWin32SurfaceKHR(vkz_instance, &createInfo, NULL, &vkz_surface) != VK_SUCCESS) {
     MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
     return 1;
   }
@@ -134,8 +143,6 @@ int CALLBACK wWinMain(
       DispatchMessage(&msg);
     }
   }
-
-
   return 0;
 }
 #else
