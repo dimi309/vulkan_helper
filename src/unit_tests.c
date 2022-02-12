@@ -5,14 +5,113 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vkzos.h>
+#include <assert.h>
 
 #ifdef _MSC_VER
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+
+    switch (message) {
+
+    case WM_PAINT:
+      break;
+    case WM_SYSKEYDOWN:
+    case WM_KEYDOWN:
+    {
+      int alt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+      switch (wParam) {
+      case VK_ESCAPE:
+        PostQuitMessage(0);
+        break;
+      case VK_RETURN:
+       
+        break;
+      }
+    }
+    break;
+
+    case WM_SYSCHAR:
+      break;
+
+    case WM_SIZE:
+    {
+      RECT clientRect;
+      memset(&clientRect, 0, sizeof(RECT));
+      GetClientRect(hwnd, &clientRect);
+      
+    }
+    break;
+
+    case WM_DESTROY:
+      PostQuitMessage(0);
+      break;
+    default:
+      return DefWindowProcW(hwnd, message, wParam, lParam);
+    }
+  return 0;
+}
+
+
+
+
 int CALLBACK wWinMain(
   _In_ HINSTANCE hInstance,
   _In_opt_ HINSTANCE hPrevInstance,
   _In_ LPWSTR lpCmdLine,
   _In_ int nShowCmd
 ) {
+
+  WNDCLASSEXW windowClass;
+  memset(&windowClass, 0, sizeof(WNDCLASSEXW));
+  windowClass.cbSize = sizeof(WNDCLASSEX);
+  windowClass.style = CS_HREDRAW | CS_VREDRAW;
+  windowClass.lpfnWndProc = &WndProc;
+  windowClass.cbClsExtra = 0;
+  windowClass.cbWndExtra = 0;
+  windowClass.hInstance = hInstance;
+  windowClass.hIcon = LoadIcon(hInstance, NULL);
+  windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+  windowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+  windowClass.lpszMenuName = NULL;
+  windowClass.lpszClassName = L"small3d unit tests";
+  windowClass.hIconSm = LoadIcon(hInstance, NULL);
+  ATOM atom = RegisterClassExW(&windowClass);
+  assert(atom > 0);
+
+
+  int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+  int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+  int width = 800, height = 600;
+  RECT windowRect = { 0, 0, width, height };
+
+  AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+  int windowWidth = windowRect.right - windowRect.left;
+  int windowHeight = windowRect.bottom - windowRect.top;
+
+  // center
+
+  int windowX = (screenWidth - windowWidth) / 2;
+  int windowY = (screenHeight - windowHeight) / 2;
+
+  HWND hWnd = CreateWindowExW(NULL, L"small3d unit tests", L"small3d unit tests", WS_OVERLAPPEDWINDOW, windowX, windowY,
+    windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
+
+  ShowWindow(hWnd, SW_SHOW);
+
+  MSG msg;
+  memset(&msg, 0, sizeof(msg));
+
+  while (msg.message != WM_QUIT)
+  {
+    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+  }
+
 
   return 0;
 }
