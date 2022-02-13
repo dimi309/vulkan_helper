@@ -16,11 +16,13 @@
 extern struct android_app *vkz_android_app;
 #endif
 
-#ifdef VKZOS_IOS
+#ifdef SMALL3D_IOS
 #include <MoltenVK/mvk_vulkan.h>
 #else
 #include <vulkan/vulkan.h>
 #endif
+
+void vkz_wait_gpu_cpu_fence(uint32_t idx);
 
 /**
  * @brief The Vulkan instance
@@ -71,9 +73,10 @@ int vkz_create_instance(const char* application_name,
 /**
  * @brief  Initialise. Internally this means create physical device, select queue
  *         families and create logical device.
+ * @param  max_frames Maximum number of frames to be rendering to asynchronously
  * @return 1 if successful, 0 otherwise
  */
-int vkz_init(void);
+int vkz_init(uint32_t max_frames);
 
 /**
  * @brief Set width and height for all rendering calculations.
@@ -190,9 +193,10 @@ int vkz_recreate_pipelines_and_swapchain(void);
  *
  * @param pipeline_index The index of the pipeline
  * @param image_index    The index of the acquired swapchain image
+ * @param frame_index_out [out] The frame index (used for async rendering - different from image_index)
  * @return 1 if successful, 0 otherwise
  */
-int vkz_acquire_next_image(uint32_t pipeline_index, uint32_t* image_index);
+int vkz_acquire_next_image(uint32_t pipeline_index, uint32_t* image_index, uint32_t* frame_index_out);
 
 /**
  * @brief Present next swapchain image (the one acquired by

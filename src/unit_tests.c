@@ -114,7 +114,7 @@ int CALLBACK wWinMain(
     return 1;
   }
 
-  if (!vkz_init()) {
+  if (!vkz_init(3)) {
     MessageBox(NULL, "Failed to initialise Vulkan", "Error", MB_OK);
   }
 
