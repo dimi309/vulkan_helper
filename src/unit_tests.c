@@ -53,9 +53,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
   return 0;
 }
 
-
-
-
 int CALLBACK wWinMain(
   _In_ HINSTANCE hInstance,
   _In_opt_ HINSTANCE hPrevInstance,
@@ -63,21 +60,11 @@ int CALLBACK wWinMain(
   _In_ int nShowCmd
 ) {
 
-  const char* const extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+  const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
   if (!vkz_create_instance("title", extensions, 2)) {
-    MessageBox(NULL, "Failed to initialise Vulkan", "Error", MB_OK);
+    MessageBox(NULL, "Failed to create Vulkan instance", "Error", MB_OK);
   }
-  else {
-    MessageBox(NULL, "Vulkan initialised ok", "Info", MB_OK);
-  }
-
-  /*if (!vkz_create_instance("title", NULL, 0)) {
-    MessageBox(NULL, "Failed to initialise Vulkan", "Error", MB_OK);
-  }
-  else {
-    MessageBox(NULL, "Vulkan initialised ok", "Info", MB_OK);
-  }*/
 
   WNDCLASSEXW windowClass;
   memset(&windowClass, 0, sizeof(WNDCLASSEXW));
@@ -109,11 +96,11 @@ int CALLBACK wWinMain(
   int windowHeight = windowRect.bottom - windowRect.top;
 
   // center
-
+  
   int windowX = (screenWidth - windowWidth) / 2;
   int windowY = (screenHeight - windowHeight) / 2;
 
-  HWND hWnd = CreateWindowExW(NULL, L"small3d unit tests", L"small3d unit tests", WS_OVERLAPPEDWINDOW, windowX, windowY,
+  HWND hWnd = CreateWindowExW(0, L"small3d unit tests", L"small3d unit tests", WS_OVERLAPPEDWINDOW, windowX, windowY,
     windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
 
   VkWin32SurfaceCreateInfoKHR createInfo;
@@ -126,8 +113,17 @@ int CALLBACK wWinMain(
     MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
     return 1;
   }
-  else {
-    MessageBox(NULL, "Created Vulkan surface", "Info", MB_OK);
+
+  if (!vkz_init()) {
+    MessageBox(NULL, "Failed to initialise Vulkan", "Error", MB_OK);
+  }
+
+  vkz_set_width_height(width, height);
+
+  vkz_create_sync_objects();
+
+  if (!vkz_create_swapchain()) {
+    MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
   }
 
   ShowWindow(hWnd, SW_SHOW);
@@ -143,6 +139,10 @@ int CALLBACK wWinMain(
       DispatchMessage(&msg);
     }
   }
+
+  vkz_destroy_sync_objects();
+  vkz_shutdown();
+
   return 0;
 }
 #else
