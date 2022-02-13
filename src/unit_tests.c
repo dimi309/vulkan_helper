@@ -6,12 +6,19 @@
 #include <stdio.h>
 #include <vkzos.h>
 #include <assert.h>
+#include <conio.h>
 
 #include <vulkan\vulkan_win32.h>
 
 #ifdef _MSC_VER
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+
+  //other code
+  AllocConsole();
+  freopen("CONIN$", "r", stdin);
+  freopen("CONOUT$", "w", stdout);
+  freopen("CONOUT$", "w", stderr);
 
     switch (message) {
 
@@ -139,10 +146,11 @@ int CALLBACK wWinMain(
       DispatchMessage(&msg);
     }
   }
-
+  vkz_destroy_swapchain();
   vkz_destroy_sync_objects();
   vkz_shutdown();
-
+  printf("Press a key to close.");
+  _getch();
   return 0;
 }
 #else
