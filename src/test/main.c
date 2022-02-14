@@ -65,8 +65,14 @@ int CALLBACK wWinMain(
   _In_ HINSTANCE hInstance,
   _In_opt_ HINSTANCE hPrevInstance,
   _In_ LPWSTR lpCmdLine,
-  _In_ int nShowCmd
-) {
+  _In_ int nShowCmd) {
+
+  float *vertexData = NULL, *textureCoordsData = NULL;
+  uint32_t *indexData = NULL;
+
+  createRectangle(-0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 
+    vertexData, indexData, textureCoordsData);
+
 
   const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
@@ -150,6 +156,9 @@ int CALLBACK wWinMain(
   vkz_destroy_swapchain();
   vkz_destroy_sync_objects();
   vkz_shutdown();
+  free(indexData);
+  free(vertexData);
+  free(textureCoordsData);
   printf("Press a key to close.");
   _getch();
   return 0;
