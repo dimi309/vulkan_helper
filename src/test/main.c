@@ -13,13 +13,11 @@
 
 #ifdef _MSC_VER
 
-VkVertexInputBindingDescription binding_desc[3];
-VkVertexInputAttributeDescription attrib_desc[3];
+VkVertexInputBindingDescription binding_desc[2];
+VkVertexInputAttributeDescription attrib_desc[2];
 
 int set_input_state_callback(VkPipelineVertexInputStateCreateInfo*
   inputStateCreateInfo) {
-
-  memset(inputStateCreateInfo, 0, sizeof(inputStateCreateInfo));
 
   memset(binding_desc, 0, 3 * sizeof(VkVertexInputBindingDescription));
 
@@ -40,9 +38,9 @@ int set_input_state_callback(VkPipelineVertexInputStateCreateInfo*
   attrib_desc[1].location = 1;
   attrib_desc[1].format = VK_FORMAT_R8G8B8A8_UINT;
   attrib_desc[1].offset = 0;
-
-  inputStateCreateInfo->vertexBindingDescriptionCount = 3;
-  inputStateCreateInfo->vertexAttributeDescriptionCount = 3;
+  
+  inputStateCreateInfo->vertexBindingDescriptionCount = 2;
+  inputStateCreateInfo->vertexAttributeDescriptionCount = 2;
   inputStateCreateInfo->pVertexBindingDescriptions = binding_desc;
   inputStateCreateInfo->pVertexAttributeDescriptions = attrib_desc;
 
@@ -51,8 +49,7 @@ int set_input_state_callback(VkPipelineVertexInputStateCreateInfo*
 
 int set_pipeline_layout_callback(VkPipelineLayoutCreateInfo*
   pipelineLayoutCreateInfo) {
-  memset(pipelineLayoutCreateInfo, 0, sizeof(VkPipelineLayoutCreateInfo));
-
+ 
   pipelineLayoutCreateInfo->pSetLayouts = NULL;
   pipelineLayoutCreateInfo->setLayoutCount = 0;
 
