@@ -110,8 +110,9 @@ int CALLBACK wWinMain(
   _In_ LPWSTR lpCmdLine,
   _In_ int nShowCmd) {
 
-  float *vertexData = NULL, *textureCoordsData = NULL;
-  uint32_t *indexData = NULL;
+  float *vertexData = malloc(16 * sizeof(float)), *textureCoordsData = malloc(8 * sizeof(float));
+  uint32_t *indexData = malloc(6 * sizeof(uint32_t));
+  
 
   createRectangle(-0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 
     vertexData, indexData, textureCoordsData);
@@ -189,6 +190,38 @@ int CALLBACK wWinMain(
     set_input_state_callback, set_pipeline_layout_callback,
     &pipelineIndex)) {
     MessageBox(NULL, "Failed to create Pipeline", "Error", MB_OK);
+  }
+  VkBuffer position_buffer = VK_NULL_HANDLE;
+  VkDeviceMemory position_memory = VK_NULL_HANDLE;
+  if (!vkz_create_buffer(&position_buffer,
+    VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    16 * sizeof(float),
+    &position_memory,
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)) {
+    MessageBox(NULL, "Failed to create postition buffer", "Error", MB_OK);
+  }
+
+  VkBuffer stagingBuffer;
+  VkDeviceMemory stagingBufferMemory;
+
+  if (vkz_create_buffer(&stagingBuffer,
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    16 * sizeof(float),
+    &stagingBufferMemory,
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+    void* stagingData;
+    vkMapMemory(vkz_logical_device, stagingBufferMemory, 0,
+      VK_WHOLE_SIZE,
+      0, &stagingData);
+    memcpy(stagingData, vertexData, 16 * sizeof(float));
+    vkUnmapMemory(vkz_logical_device, stagingBufferMemory);
+
+    vkz_copy_buffer(stagingBuffer, position_buffer,
+      16 * sizeof(float));
+
+    vkz_destroy_buffer(stagingBuffer, stagingBufferMemory);
   }
 
   ShowWindow(hWnd, SW_SHOW);
