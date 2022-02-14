@@ -14,9 +14,12 @@
 #ifdef _MSC_VER
 
 VkVertexInputBindingDescription binding_desc[3];
+VkVertexInputAttributeDescription attrib_desc[3];
 
 int set_input_state_callback(VkPipelineVertexInputStateCreateInfo*
   inputStateCreateInfo) {
+
+  memset(inputStateCreateInfo, 0, sizeof(inputStateCreateInfo));
 
   memset(binding_desc, 0, 3 * sizeof(VkVertexInputBindingDescription));
 
@@ -24,16 +27,35 @@ int set_input_state_callback(VkPipelineVertexInputStateCreateInfo*
   binding_desc[0].stride = 4 * sizeof(float);
 
   binding_desc[1].binding = 1;
-  binding_desc[1].stride = 3 * sizeof(uint32_t);
+  binding_desc[1].stride = 3;
 
-  binding_desc[2].binding = 0;
-  binding_desc[2].stride = 2 * sizeof(float);
+  memset(attrib_desc, 0, 3 * sizeof(VkVertexInputAttributeDescription));
+
+  attrib_desc[0].binding = 0;
+  attrib_desc[0].location = 0;
+  attrib_desc[0].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+  attrib_desc[0].offset = 0;
+
+  attrib_desc[1].binding = 1;
+  attrib_desc[1].location = 1;
+  attrib_desc[1].format = VK_FORMAT_R8G8B8A8_UINT;
+  attrib_desc[1].offset = 0;
+
+  inputStateCreateInfo->vertexBindingDescriptionCount = 3;
+  inputStateCreateInfo->vertexAttributeDescriptionCount = 3;
+  inputStateCreateInfo->pVertexBindingDescriptions = binding_desc;
+  inputStateCreateInfo->pVertexAttributeDescriptions = attrib_desc;
 
   return 1;
 }
 
 int set_pipeline_layout_callback(VkPipelineLayoutCreateInfo*
   pipelineLayoutCreateInfo) {
+  memset(pipelineLayoutCreateInfo, 0, sizeof(VkPipelineLayoutCreateInfo));
+
+  pipelineLayoutCreateInfo->pSetLayouts = NULL;
+  pipelineLayoutCreateInfo->setLayoutCount = 0;
+
   return 1;
 }
 
@@ -121,7 +143,6 @@ int CALLBACK wWinMain(
   ATOM atom = RegisterClassExW(&windowClass);
   assert(atom > 0);
 
-
   int screenWidth = GetSystemMetrics(SM_CXSCREEN);
   int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
@@ -164,6 +185,15 @@ int CALLBACK wWinMain(
     MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
   }
 
+  uint32_t pipelineIndex = 100;
+
+  if (!vkz_create_pipeline("..\\..\\resources\\shaders\\vertexShader.spv", 
+    "..\\..\\resources\\shaders\\fragmentShader.spv",
+    set_input_state_callback, set_pipeline_layout_callback,
+    &pipelineIndex)) {
+    MessageBox(NULL, "Failed to create Pipeline", "Error", MB_OK);
+  }
+
   ShowWindow(hWnd, SW_SHOW);
 
   MSG msg;
@@ -177,6 +207,7 @@ int CALLBACK wWinMain(
       DispatchMessage(&msg);
     }
   }
+  vkz_destroy_pipeline(pipelineIndex);
   vkz_destroy_swapchain();
   vkz_destroy_sync_objects();
   vkz_shutdown();
