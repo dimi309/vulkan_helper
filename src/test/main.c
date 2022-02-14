@@ -9,6 +9,7 @@
 #include <conio.h>
 
 #include <vulkan\vulkan_win32.h>
+#include "rectangle.h"
 
 #ifdef _MSC_VER
 
