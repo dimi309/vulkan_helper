@@ -13,6 +13,30 @@
 
 #ifdef _MSC_VER
 
+VkVertexInputBindingDescription binding_desc[3];
+
+int set_input_state_callback(VkPipelineVertexInputStateCreateInfo*
+  inputStateCreateInfo) {
+
+  memset(binding_desc, 0, 3 * sizeof(VkVertexInputBindingDescription));
+
+  binding_desc[0].binding = 0;
+  binding_desc[0].stride = 4 * sizeof(float);
+
+  binding_desc[1].binding = 1;
+  binding_desc[1].stride = 3 * sizeof(uint32_t);
+
+  binding_desc[2].binding = 0;
+  binding_desc[2].stride = 2 * sizeof(float);
+
+  return 1;
+}
+
+int set_pipeline_layout_callback(VkPipelineLayoutCreateInfo*
+  pipelineLayoutCreateInfo) {
+  return 1;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
   //other code
