@@ -15,10 +15,21 @@
 
 #define NUM_FRAMES_IN_FLIGHT 3
 
+float* vertexData, * textureCoordsData;
+uint32_t* indexData;
+uint32_t pipeline_index = 100;
+uint32_t image_index = 0;
+VkBuffer vertex_buffer = VK_NULL_HANDLE;
+VkDeviceMemory vertex_buffer_memory = VK_NULL_HANDLE;
+VkBuffer index_buffer = VK_NULL_HANDLE;
+VkDeviceMemory index_buffer_memory = VK_NULL_HANDLE;
+
 VkVertexInputBindingDescription binding_desc[1];
 VkVertexInputAttributeDescription attrib_desc[1];
 VkCommandBuffer command_buffer[NUM_FRAMES_IN_FLIGHT];
 uint32_t current_frame_index = 0;
+
+BOOL closing = FALSE;
 
 int set_input_state_callback(VkPipelineVertexInputStateCreateInfo*
   inputStateCreateInfo) {
@@ -45,7 +56,7 @@ int set_input_state_callback(VkPipelineVertexInputStateCreateInfo*
 
 int set_pipeline_layout_callback(VkPipelineLayoutCreateInfo*
   pipelineLayoutCreateInfo) {
- 
+
   pipelineLayoutCreateInfo->pSetLayouts = NULL;
   pipelineLayoutCreateInfo->setLayoutCount = 0;
 
@@ -60,43 +71,69 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
   freopen("CONOUT$", "w", stdout);
   freopen("CONOUT$", "w", stderr);
 
-    switch (message) {
+  switch (message) {
 
-    case WM_PAINT:
-      break;
-    case WM_SYSKEYDOWN:
-    case WM_KEYDOWN:
-    {
-      int alt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
-      switch (wParam) {
-      case VK_ESCAPE:
-        PostQuitMessage(0);
-        break;
-      case VK_RETURN:
-       
-        break;
-      }
-    }
+  case WM_PAINT:
+
+    vkz_acquire_next_image(pipeline_index, &image_index, &current_frame_index);
+    vkz_wait_gpu_cpu_fence(current_frame_index);
+    vkz_destroy_draw_command_buffer(&command_buffer[current_frame_index]);
+
+    vkz_begin_draw_command_buffer(&command_buffer[current_frame_index]);
+    vkz_bind_pipeline_to_command_buffer(pipeline_index, &command_buffer[current_frame_index]);
+    VkDeviceSize binding = 0;
+    vkCmdBindVertexBuffers(command_buffer[current_frame_index], 0, 1, &vertex_buffer, &binding);
+    vkCmdBindIndexBuffer(command_buffer[current_frame_index], index_buffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdDrawIndexed(command_buffer[current_frame_index], 6, 1, 0, 0, 0);
+    vkz_end_draw_command_buffer(&command_buffer[current_frame_index]);
+
+    vkz_draw(&command_buffer[current_frame_index]);
+    vkz_present_next_image();
+
     break;
-
-    case WM_SYSCHAR:
-      break;
-
-    case WM_SIZE:
-    {
-      RECT clientRect;
-      memset(&clientRect, 0, sizeof(RECT));
-      GetClientRect(hwnd, &clientRect);
-      
-    }
-    break;
-
-    case WM_DESTROY:
+  case WM_SYSKEYDOWN:
+  case WM_KEYDOWN:
+  {
+    int alt = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+    switch (wParam) {
+    case VK_ESCAPE:
       PostQuitMessage(0);
       break;
-    default:
-      return DefWindowProcW(hwnd, message, wParam, lParam);
+    case VK_RETURN:
+
+      break;
     }
+  }
+  break;
+
+  case WM_SYSCHAR:
+    break;
+
+  case WM_SIZE:
+  {
+    RECT clientRect;
+    memset(&clientRect, 0, sizeof(RECT));
+    GetClientRect(hwnd, &clientRect);
+
+  }
+  break;
+
+  case WM_DESTROY:
+
+    for (int idx = 0; idx < NUM_FRAMES_IN_FLIGHT; ++idx) {
+      vkz_wait_gpu_cpu_fence(idx);
+      vkz_destroy_draw_command_buffer(&command_buffer[idx]);
+    }
+
+    vkz_destroy_buffer(vertex_buffer, vertex_buffer_memory);
+    vkz_destroy_buffer(index_buffer, index_buffer_memory);
+    vkz_destroy_pipeline(pipeline_index);
+
+    PostQuitMessage(0);
+    break;
+  default:
+    return DefWindowProcW(hwnd, message, wParam, lParam);
+  }
   return 0;
 }
 
@@ -106,11 +143,12 @@ int CALLBACK wWinMain(
   _In_ LPWSTR lpCmdLine,
   _In_ int nShowCmd) {
 
-  float *vertexData = malloc(16 * sizeof(float)), *textureCoordsData = malloc(8 * sizeof(float));
-  uint32_t *indexData = malloc(6 * sizeof(uint32_t));
-  
+  vertexData = malloc(16 * sizeof(float));
+  textureCoordsData = malloc(8 * sizeof(float));
+  indexData = malloc(6 * sizeof(uint32_t));
 
-  createRectangle(-0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 
+
+  createRectangle(-0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f,
     vertexData, indexData, textureCoordsData);
 
 
@@ -149,7 +187,7 @@ int CALLBACK wWinMain(
   int windowHeight = windowRect.bottom - windowRect.top;
 
   // center
-  
+
   int windowX = (screenWidth - windowWidth) / 2;
   int windowY = (screenHeight - windowHeight) / 2;
 
@@ -179,16 +217,15 @@ int CALLBACK wWinMain(
     MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
   }
 
-  uint32_t pipeline_index = 100;
+  
 
-  if (!vkz_create_pipeline("..\\..\\resources\\shaders\\vertexShader.spv", 
+  if (!vkz_create_pipeline("..\\..\\resources\\shaders\\vertexShader.spv",
     "..\\..\\resources\\shaders\\fragmentShader.spv",
     set_input_state_callback, set_pipeline_layout_callback,
     &pipeline_index)) {
     MessageBox(NULL, "Failed to create Pipeline", "Error", MB_OK);
   }
-  VkBuffer vertex_buffer = VK_NULL_HANDLE;
-  VkDeviceMemory vertex_buffer_memory = VK_NULL_HANDLE;
+  
   if (!vkz_create_buffer(&vertex_buffer,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT |
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
@@ -218,11 +255,8 @@ int CALLBACK wWinMain(
       16 * sizeof(float));
 
     vkz_destroy_buffer(staging_buffer, staging_buffer_memory);
-    
-  }
 
-  VkBuffer index_buffer = VK_NULL_HANDLE;
-  VkDeviceMemory index_buffer_memory = VK_NULL_HANDLE;
+  }
 
   if (!vkz_create_buffer(&index_buffer,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT |
@@ -254,18 +288,12 @@ int CALLBACK wWinMain(
   else {
     MessageBox(NULL, "Failed to create staging buffer for indices", "Error", MB_OK);
   }
-
+  
 
   for (int idx = 0; idx < NUM_FRAMES_IN_FLIGHT; ++idx) {
     command_buffer[idx] = VK_NULL_HANDLE;
-    
-    vkz_begin_draw_command_buffer(&command_buffer[idx]);
-    vkz_bind_pipeline_to_command_buffer(pipeline_index, &command_buffer[idx]);
-    VkDeviceSize binding = 0;
-    vkCmdBindVertexBuffers(command_buffer[idx], 0, 1, &vertex_buffer, &binding);
-    vkCmdBindIndexBuffer(command_buffer[idx], index_buffer, 0, VK_INDEX_TYPE_UINT32);
-    vkCmdDrawIndexed(command_buffer[idx], 4, 1, 0, 0, 0);
-    vkz_end_draw_command_buffer(&command_buffer[idx]);
+
+
   }
 
   ShowWindow(hWnd, SW_SHOW);
@@ -275,12 +303,6 @@ int CALLBACK wWinMain(
 
   while (msg.message != WM_QUIT)
   {
-    int image_index = 0;
-    vkz_acquire_next_image(pipeline_index, &image_index, &current_frame_index);
-    vkz_wait_gpu_cpu_fence(current_frame_index);
-    vkz_draw(&command_buffer[current_frame_index]);
-    vkz_present_next_image();
-
     if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
     {
       TranslateMessage(&msg);
@@ -288,13 +310,7 @@ int CALLBACK wWinMain(
     }
   }
 
-  for (int idx = 0; idx < NUM_FRAMES_IN_FLIGHT; ++idx) {
-    vkz_wait_gpu_cpu_fence(idx);
-    vkz_destroy_draw_command_buffer(&command_buffer[idx]);
-  }
-
-  vkz_destroy_buffer(vertex_buffer, vertex_buffer_memory);
-  vkz_destroy_pipeline(pipeline_index);
+  
   vkz_destroy_swapchain();
   vkz_destroy_sync_objects();
   vkz_shutdown();
