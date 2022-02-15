@@ -1612,8 +1612,9 @@ int vkz_end_draw_command_buffer(VkCommandBuffer* command_buffer) {
 
 int vkz_destroy_draw_command_buffer(VkCommandBuffer* command_buffer) {
 
-  vkFreeCommandBuffers(vkz_logical_device, command_pool, 1, command_buffer);
-
+  if (*command_buffer != VK_NULL_HANDLE) {
+    vkFreeCommandBuffers(vkz_logical_device, command_pool, 1, command_buffer);
+  }
   return 1;
 }
 
@@ -1879,11 +1880,10 @@ int end_single_time_commands(VkCommandBuffer command_buffer) {
   si.commandBufferCount = 1;
   si.pCommandBuffers = &command_buffer;
 
-  vkResetFences(vkz_logical_device, 1,
-    &gpu_cpu_fence[frame_index]);
-  vkQueueSubmit(vkz_graphics_queue, 1, &si, gpu_cpu_fence[frame_index]);
+  
+  vkQueueSubmit(vkz_graphics_queue, 1, &si, VK_NULL_HANDLE);
 
-  vkz_wait_gpu_cpu_fence(frame_index);
+  vkDeviceWaitIdle(vkz_logical_device);
 
   vkFreeCommandBuffers(vkz_logical_device,
     command_pool,
@@ -2088,7 +2088,7 @@ int vkz_create_sampler(VkSampler* sampler) {
   sci.mipLodBias = 0.0f;
   sci.minLod = 0.0f;
   sci.maxLod = 0.0f;
-  sci.compareEnable = VK_TRUE;
+  sci.compareEnable = VK_KHR_portability_subset_supported ? VK_FALSE : VK_TRUE;
   if (vkCreateSampler(vkz_logical_device, &sci, NULL, sampler) != VK_SUCCESS) {
     return 0;
   }
