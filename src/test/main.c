@@ -217,8 +217,6 @@ int CALLBACK wWinMain(
     MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
   }
 
-  
-
   if (!vkz_create_pipeline("..\\..\\resources\\shaders\\vertexShader.spv",
     "..\\..\\resources\\shaders\\fragmentShader.spv",
     set_input_state_callback, set_pipeline_layout_callback,
@@ -255,7 +253,9 @@ int CALLBACK wWinMain(
       16 * sizeof(float));
 
     vkz_destroy_buffer(staging_buffer, staging_buffer_memory);
-
+  }
+  else {
+    MessageBox(NULL, "Failed to create staging buffer for vertices", "Error", MB_OK);
   }
 
   if (!vkz_create_buffer(&index_buffer,
