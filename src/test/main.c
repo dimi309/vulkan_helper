@@ -77,16 +77,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
     vkz_acquire_next_image(pipeline_index, &image_index, &current_frame_index);
     vkz_wait_gpu_cpu_fence(current_frame_index);
-    vkz_destroy_draw_command_buffer(&command_buffer[current_frame_index]);
-
-    vkz_begin_draw_command_buffer(&command_buffer[current_frame_index]);
-    vkz_bind_pipeline_to_command_buffer(pipeline_index, &command_buffer[current_frame_index]);
-    VkDeviceSize binding = 0;
-    vkCmdBindVertexBuffers(command_buffer[current_frame_index], 0, 1, &vertex_buffer, &binding);
-    vkCmdBindIndexBuffer(command_buffer[current_frame_index], index_buffer, 0, VK_INDEX_TYPE_UINT32);
-    vkCmdDrawIndexed(command_buffer[current_frame_index], 6, 1, 0, 0, 0);
-    vkz_end_draw_command_buffer(&command_buffer[current_frame_index]);
-
+    
+    //vkz_destroy_draw_command_buffer(&command_buffer[current_frame_index]);
+    
+    if (command_buffer[current_frame_index] == VK_NULL_HANDLE) {
+      vkz_begin_draw_command_buffer(&command_buffer[current_frame_index]);
+      vkz_bind_pipeline_to_command_buffer(pipeline_index, &command_buffer[current_frame_index]);
+      VkDeviceSize binding = 0;
+      vkCmdBindVertexBuffers(command_buffer[current_frame_index], 0, 1, &vertex_buffer, &binding);
+      vkCmdBindIndexBuffer(command_buffer[current_frame_index], index_buffer, 0, VK_INDEX_TYPE_UINT32);
+      vkCmdDrawIndexed(command_buffer[current_frame_index], 6, 1, 0, 0, 0);
+      vkz_end_draw_command_buffer(&command_buffer[current_frame_index]);
+    }
     vkz_draw(&command_buffer[current_frame_index]);
     vkz_present_next_image();
 
@@ -292,8 +294,6 @@ int CALLBACK wWinMain(
 
   for (int idx = 0; idx < NUM_FRAMES_IN_FLIGHT; ++idx) {
     command_buffer[idx] = VK_NULL_HANDLE;
-
-
   }
 
   ShowWindow(hWnd, SW_SHOW);
