@@ -1,5 +1,6 @@
 from conans import ConanFile, CMake, tools
 import os
+import shutil
 
 class Small3dConan(ConanFile):
     name = "vkzos"
