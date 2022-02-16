@@ -22,8 +22,6 @@ extern struct android_app *vkz_android_app;
 #include <vulkan/vulkan.h>
 #endif
 
-void vkz_wait_gpu_cpu_fence(uint32_t idx);
-
 /**
  * @brief The Vulkan instance
  */
@@ -59,6 +57,12 @@ extern uint32_t vkz_swapchain_image_count;
  * @brief The colour used to clear the screen.
  */
 extern VkClearColorValue vkz_clear_colour;
+
+/**
+ * @brief Wait on a GPU-CPU fence
+ * @param The GPU-CPU fence index
+ */
+void vkz_wait_gpu_cpu_fence(uint32_t idx);
 
 /**
  * @brief  Create a vulkan instance
