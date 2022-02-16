@@ -5,8 +5,6 @@ void createRectangle(float topLeftX, float topLeftY, float topLeftZ,
   float bottomRightX, float bottomRightY, float bottomRightZ, float* vertexData,
   uint32_t* indexData, float* textureCoordsData) {
 
-  
-
   vertexData[0] = bottomRightX;
   vertexData[1] = bottomRightY;
   vertexData[2] = bottomRightZ;

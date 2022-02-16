@@ -150,7 +150,7 @@ int CALLBACK wWinMain(
   indexData = malloc(6 * sizeof(uint32_t));
 
 
-  createRectangle(-0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f,
+  createRectangle(-0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f,
     vertexData, indexData, textureCoordsData);
 
 
