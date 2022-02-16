@@ -8,12 +8,14 @@ target_include_directories(vkzos PUBLIC ${Vulkan_INCLUDE_DIRS} ${CMAKE_SOURCE_DI
 
 target_link_libraries(vkzos PUBLIC ${Vulkan_LIBRARIES})
 
-if(MSVC)
-  add_executable(test WIN32 ${TEST_SOURCE_AND_HEADER_FILES})
-else()
-  add_executable(test ${TEST_SOURCE_AND_HEADER_FILES})
+if(VKZOS_TESTS)
+  if(MSVC)
+    add_executable(test WIN32 ${TEST_SOURCE_AND_HEADER_FILES})
+  else()
+    add_executable(test ${TEST_SOURCE_AND_HEADER_FILES})
+  endif()
+
+  target_include_directories(test PUBLIC ${CMAKE_SOURCE_DIR}/include)
+
+  target_link_libraries(test PUBLIC vkzos)
 endif()
-
-target_include_directories(test PUBLIC ${CMAKE_SOURCE_DIR}/include)
-
-target_link_libraries(test PUBLIC vkzos)

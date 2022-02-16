@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0.2)
 
 project(vkzos C)
 
+option(VKZOS_TESTS "Build test program" ON)
+
 if(IOS AND DEFINED ANDROID_PLATFORM)
   message(FATAL_ERROR "Variables defined for both iOS and Android (IOS is set and ANDROID_PLATFORM exists)")
 endif()
@@ -26,8 +28,8 @@ if(MSVC)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/lib")
 endif()
 
-# if(NOT IOS) # Linking to MoltenVK explicitly on iOS
+if(NOT IOS) # Linking to MoltenVK explicitly on iOS
 find_package(Vulkan REQUIRED)
-# endif()
+endif()
 
 subdirs(src)
