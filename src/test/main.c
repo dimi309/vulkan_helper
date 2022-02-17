@@ -180,7 +180,7 @@ int CALLBACK wWinMain(
   windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
   windowClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
   windowClass.lpszMenuName = NULL;
-  windowClass.lpszClassName = L"vkzos unit tests";
+  windowClass.lpszClassName = L"vkzos test";
   windowClass.hIconSm = LoadIcon(hInstance, NULL);
   ATOM atom = RegisterClassExW(&windowClass);
   assert(atom > 0);
@@ -201,7 +201,7 @@ int CALLBACK wWinMain(
   int windowX = (screenWidth - windowWidth) / 2;
   int windowY = (screenHeight - windowHeight) / 2;
 
-  HWND hWnd = CreateWindowExW(0, L"vkzos unit tests", L"vkzos unit tests", WS_OVERLAPPEDWINDOW, windowX, windowY,
+  HWND hWnd = CreateWindowExW(0, L"vkzos test", L"vkzos test", WS_OVERLAPPEDWINDOW, windowX, windowY,
     windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
 
   VkWin32SurfaceCreateInfoKHR createInfo;
