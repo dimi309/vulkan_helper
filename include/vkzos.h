@@ -4,7 +4,7 @@
  *
  * Created on: 2018/05/01
  *     Author: Dimitri Kourkoulis
- *     License: BSD 3-Clause License (see LICENSE file)
+ *     License: MIT (see LICENSE file)
  */
 #ifndef VKZOS_H
 #define VKZOS_H

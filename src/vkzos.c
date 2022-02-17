@@ -3,7 +3,7 @@
  *
  *  Created on: 2018/05/01
  *      Author: Dimitri Kourkoulis
- *     License: BSD 3-Clause License (see LICENSE file)
+ *     License: MIT (see LICENSE file)
  */
 #include "vkzos.h"
 #include <string.h>

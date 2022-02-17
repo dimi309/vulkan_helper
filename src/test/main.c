@@ -1,3 +1,11 @@
+/*
+ *  main.c
+ *
+ *  Created on: 2022/02/07
+ *      Author: Dimitri Kourkoulis
+ *     License: MIT (see LICENSE file)
+ */
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>

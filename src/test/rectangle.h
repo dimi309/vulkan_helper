@@ -1,3 +1,11 @@
+/*
+ *  rectangle.c
+ *
+ *  Created on: 2022/02/07
+ *      Author: Dimitri Kourkoulis
+ *     License: MIT (see LICENSE file)
+ */
+
 #ifndef RECTANGLE_H
 #define RECTANGLE_H
 
