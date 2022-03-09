@@ -12,7 +12,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#include <vkzos.h>
+#include <vulkan_helper.h>
 #include <assert.h>
 #include <conio.h>
 
@@ -83,22 +83,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
   case WM_PAINT:
 
-    vkz_acquire_next_image(pipeline_index, &image_index, &current_frame_index);
-    vkz_wait_gpu_cpu_fence(current_frame_index);
-    
-    //vkz_destroy_draw_command_buffer(&command_buffer[current_frame_index]);
+    vh_acquire_next_image(pipeline_index, &image_index, &current_frame_index);
+    vh_wait_gpu_cpu_fence(current_frame_index);
     
     if (command_buffer[current_frame_index] == VK_NULL_HANDLE) {
-      vkz_begin_draw_command_buffer(&command_buffer[current_frame_index]);
-      vkz_bind_pipeline_to_command_buffer(pipeline_index, &command_buffer[current_frame_index]);
+      vh_begin_draw_command_buffer(&command_buffer[current_frame_index]);
+      vh_bind_pipeline_to_command_buffer(pipeline_index, &command_buffer[current_frame_index]);
       VkDeviceSize binding = 0;
       vkCmdBindVertexBuffers(command_buffer[current_frame_index], 0, 1, &vertex_buffer, &binding);
       vkCmdBindIndexBuffer(command_buffer[current_frame_index], index_buffer, 0, VK_INDEX_TYPE_UINT32);
       vkCmdDrawIndexed(command_buffer[current_frame_index], 6, 1, 0, 0, 0);
-      vkz_end_draw_command_buffer(&command_buffer[current_frame_index]);
+      vh_end_draw_command_buffer(&command_buffer[current_frame_index]);
     }
-    vkz_draw(&command_buffer[current_frame_index]);
-    vkz_present_next_image();
+    vh_draw(&command_buffer[current_frame_index]);
+    vh_present_next_image();
 
     break;
   case WM_SYSKEYDOWN:
@@ -131,13 +129,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
   case WM_DESTROY:
 
     for (int idx = 0; idx < NUM_FRAMES_IN_FLIGHT; ++idx) {
-      vkz_wait_gpu_cpu_fence(idx);
-      vkz_destroy_draw_command_buffer(&command_buffer[idx]);
+      vh_wait_gpu_cpu_fence(idx);
+      vh_destroy_draw_command_buffer(&command_buffer[idx]);
     }
 
-    vkz_destroy_buffer(vertex_buffer, vertex_buffer_memory);
-    vkz_destroy_buffer(index_buffer, index_buffer_memory);
-    vkz_destroy_pipeline(pipeline_index);
+    vh_destroy_buffer(vertex_buffer, vertex_buffer_memory);
+    vh_destroy_buffer(index_buffer, index_buffer_memory);
+    vh_destroy_pipeline(pipeline_index);
 
     PostQuitMessage(0);
     break;
@@ -164,7 +162,7 @@ int CALLBACK wWinMain(
 
   const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
-  if (!vkz_create_instance("title", extensions, 2)) {
+  if (!vh_create_instance("title", extensions, 2)) {
     MessageBox(NULL, "Failed to create Vulkan instance", "Error", MB_OK);
   }
 
@@ -210,31 +208,31 @@ int CALLBACK wWinMain(
   createInfo.pNext = NULL;
   createInfo.hinstance = hInstance;
   createInfo.hwnd = hWnd;
-  if (vkCreateWin32SurfaceKHR(vkz_instance, &createInfo, NULL, &vkz_surface) != VK_SUCCESS) {
+  if (vkCreateWin32SurfaceKHR(vh_instance, &createInfo, NULL, &vh_surface) != VK_SUCCESS) {
     MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
     return 1;
   }
 
-  if (!vkz_init(NUM_FRAMES_IN_FLIGHT)) {
+  if (!vh_init(NUM_FRAMES_IN_FLIGHT)) {
     MessageBox(NULL, "Failed to initialise Vulkan", "Error", MB_OK);
   }
 
-  vkz_set_width_height(width, height);
+  vh_set_width_height(width, height);
 
-  vkz_create_sync_objects();
+  vh_create_sync_objects();
 
-  if (!vkz_create_swapchain()) {
+  if (!vh_create_swapchain()) {
     MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
   }
 
-  if (!vkz_create_pipeline("..\\..\\resources\\shaders\\vertexShader.spv",
+  if (!vh_create_pipeline("..\\..\\resources\\shaders\\vertexShader.spv",
     "..\\..\\resources\\shaders\\fragmentShader.spv",
     set_input_state_callback, set_pipeline_layout_callback,
     &pipeline_index)) {
     MessageBox(NULL, "Failed to create Pipeline", "Error", MB_OK);
   }
   
-  if (!vkz_create_buffer(&vertex_buffer,
+  if (!vh_create_buffer(&vertex_buffer,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT |
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
     16 * sizeof(float),
@@ -246,29 +244,29 @@ int CALLBACK wWinMain(
   VkBuffer staging_buffer;
   VkDeviceMemory staging_buffer_memory;
 
-  if (vkz_create_buffer(&staging_buffer,
+  if (vh_create_buffer(&staging_buffer,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
     16 * sizeof(float),
     &staging_buffer_memory,
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
     void* staging_data = NULL;
-    vkMapMemory(vkz_logical_device, staging_buffer_memory, 0,
+    vkMapMemory(vh_logical_device, staging_buffer_memory, 0,
       VK_WHOLE_SIZE,
       0, &staging_data);
     memcpy(staging_data, vertexData, 16 * sizeof(float));
-    vkUnmapMemory(vkz_logical_device, staging_buffer_memory);
+    vkUnmapMemory(vh_logical_device, staging_buffer_memory);
 
-    vkz_copy_buffer(staging_buffer, vertex_buffer,
+    vh_copy_buffer(staging_buffer, vertex_buffer,
       16 * sizeof(float));
 
-    vkz_destroy_buffer(staging_buffer, staging_buffer_memory);
+    vh_destroy_buffer(staging_buffer, staging_buffer_memory);
   }
   else {
     MessageBox(NULL, "Failed to create staging buffer for vertices", "Error", MB_OK);
   }
 
-  if (!vkz_create_buffer(&index_buffer,
+  if (!vh_create_buffer(&index_buffer,
     VK_BUFFER_USAGE_TRANSFER_DST_BIT |
     VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
     6 * sizeof(uint32_t),
@@ -277,23 +275,23 @@ int CALLBACK wWinMain(
     MessageBox(NULL, "Failed to create index buffer", "Error", MB_OK);
   }
 
-  if (vkz_create_buffer(&staging_buffer,
+  if (vh_create_buffer(&staging_buffer,
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
     6 * sizeof(uint32_t),
     &staging_buffer_memory,
     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
     void* staging_data;
-    vkMapMemory(vkz_logical_device, staging_buffer_memory, 0,
+    vkMapMemory(vh_logical_device, staging_buffer_memory, 0,
       VK_WHOLE_SIZE,
       0, &staging_data);
     memcpy(staging_data, indexData, 6 * sizeof(uint32_t));
-    vkUnmapMemory(vkz_logical_device, staging_buffer_memory);
+    vkUnmapMemory(vh_logical_device, staging_buffer_memory);
 
-    vkz_copy_buffer(staging_buffer, index_buffer,
+    vh_copy_buffer(staging_buffer, index_buffer,
       6 * sizeof(uint32_t));
 
-    vkz_destroy_buffer(staging_buffer, staging_buffer_memory);
+    vh_destroy_buffer(staging_buffer, staging_buffer_memory);
   }
   else {
     MessageBox(NULL, "Failed to create staging buffer for indices", "Error", MB_OK);
@@ -319,9 +317,9 @@ int CALLBACK wWinMain(
   }
 
   
-  vkz_destroy_swapchain();
-  vkz_destroy_sync_objects();
-  vkz_shutdown();
+  vh_destroy_swapchain();
+  vh_destroy_sync_objects();
+  vh_shutdown();
   free(indexData);
   free(vertexData);
   free(textureCoordsData);
@@ -334,7 +332,7 @@ int main(int argc, char** argv) {
 
   uint32_t num = 0;
 
-  if (vkz_create_instance("title", NULL, num)) {
+  if (vh_create_instance("title", NULL, num)) {
     printf("Ok\n\r");
 
   }

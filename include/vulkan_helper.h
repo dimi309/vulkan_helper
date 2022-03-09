@@ -1,22 +1,22 @@
 /**
- * @file vkzos.h
+ * @file vulkan_helper.h
  * @brief Vulkan helper functions.
  *
  * Created on: 2018/05/01
  *     Author: Dimitri Kourkoulis
  *     License: MIT (see LICENSE file)
  */
-#ifndef VKZOS_H
-#define VKZOS_H
+#ifndef VULKAN_HELPER_H
+#define VULKAN_HELPER_H
 
 #ifdef __ANDROID__
 #include <android_native_app_glue.h>
 #include <android/asset_manager.h>
 #define VK_USE_PLATFORM_ANDROID_KHR
-extern struct android_app *vkz_android_app;
+extern struct android_app *vh_android_app;
 #endif
 
-#ifdef VKZOS_IOS
+#ifdef VULKAN_HELPER_IOS
 #include <MoltenVK/mvk_vulkan.h>
 #else
 #include <vulkan/vulkan.h>
@@ -25,44 +25,44 @@ extern struct android_app *vkz_android_app;
 /**
  * @brief The Vulkan instance
  */
- extern VkInstance vkz_instance;
+ extern VkInstance vh_instance;
 
 /**
  * @brief The surface on which graphics will be presented.
  */
-extern VkSurfaceKHR vkz_surface;
+extern VkSurfaceKHR vh_surface;
 
 /**
- * @brief The physical device that is selected vkz_init().
+ * @brief The physical device that is selected vh_init().
  */
 
-extern VkPhysicalDevice vkz_physical_device;
+extern VkPhysicalDevice vh_physical_device;
 
 /**
- * @brief The logical device that is created by vkz_init().
+ * @brief The logical device that is created by vh_init().
  */
-extern VkDevice vkz_logical_device;
+extern VkDevice vh_logical_device;
 
 /**
  * @brief The pipeline layouts, one for each pipeline created.
  */
-extern VkPipelineLayout* vkz_pipeline_layout;
+extern VkPipelineLayout* vh_pipeline_layout;
 
 /**
- * @brief Number of images in the swapchain, set by vkz_create_swapchain().
+ * @brief Number of images in the swapchain, set by vh_create_swapchain().
  */
-extern uint32_t vkz_swapchain_image_count;
+extern uint32_t vh_swapchain_image_count;
 
 /**
  * @brief The colour used to clear the screen.
  */
-extern VkClearColorValue vkz_clear_colour;
+extern VkClearColorValue vh_clear_colour;
 
 /**
  * @brief Wait on a GPU-CPU fence
  * @param The GPU-CPU fence index
  */
-void vkz_wait_gpu_cpu_fence(uint32_t idx);
+void vh_wait_gpu_cpu_fence(uint32_t idx);
 
 /**
  * @brief  Create a vulkan instance
@@ -71,7 +71,7 @@ void vkz_wait_gpu_cpu_fence(uint32_t idx);
  * @param  enabled_extension_count Number of extensions used
  * @return 1 if successful, 0 otherwise
  */
-int vkz_create_instance(const char* application_name,
+int vh_create_instance(const char* application_name,
   const char** enabled_extension_names,
   size_t enabled_extension_count);
 /**
@@ -80,7 +80,7 @@ int vkz_create_instance(const char* application_name,
  * @param  max_frames Maximum number of frames to be rendering to asynchronously
  * @return 1 if successful, 0 otherwise
  */
-int vkz_init(uint32_t max_frames);
+int vh_init(uint32_t max_frames);
 
 /**
  * @brief Set width and height for all rendering calculations.
@@ -88,20 +88,20 @@ int vkz_init(uint32_t max_frames);
  * @param height The new height
  * @return 1 if successful, 0 otherwise
  */
-int vkz_set_width_height(const uint32_t width, const uint32_t height);
+int vh_set_width_height(const uint32_t width, const uint32_t height);
 
 /**
  * @brief Create the swapchain that will be used. This will also create
  * the associated image views.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_create_swapchain();
+int vh_create_swapchain();
 
 /**
  * @brief Destroy the swapchain.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_destroy_swapchain(void);
+int vh_destroy_swapchain(void);
 
 /**
  * @brief Create a pipeline. This will also create associated Vulkan
@@ -130,7 +130,7 @@ int vkz_destroy_swapchain(void);
  *              will be ignored.
  * @return      1 if successful, 0 otherwise
  */
-int vkz_create_pipeline(const char* vertex_shader_path, const char* fragment_shader_path,
+int vh_create_pipeline(const char* vertex_shader_path, const char* fragment_shader_path,
   int (*set_input_state)(VkPipelineVertexInputStateCreateInfo*),
   int (*set_pipeline_layout)(VkPipelineLayoutCreateInfo*), uint32_t* index);
 
@@ -138,7 +138,7 @@ int vkz_create_pipeline(const char* vertex_shader_path, const char* fragment_sha
  * @brief Destroy a pipeline
  * @param index The index of the pipeline to destroy
  */
-int vkz_destroy_pipeline(uint32_t index);
+int vh_destroy_pipeline(uint32_t index);
 
 /**
  * @brief Begin creating a drawing command buffer 
@@ -146,7 +146,7 @@ int vkz_destroy_pipeline(uint32_t index);
  * @param command_buffer Pointer to the command buffer.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_begin_draw_command_buffer(VkCommandBuffer* command_buffer);
+int vh_begin_draw_command_buffer(VkCommandBuffer* command_buffer);
 
 /**
  * @brief Bind a pipeline to a command buffer
@@ -155,7 +155,7 @@ int vkz_begin_draw_command_buffer(VkCommandBuffer* command_buffer);
  * @param command_buffer Pointer to the command buffer.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_bind_pipeline_to_command_buffer(uint32_t pipeline_index,
+int vh_bind_pipeline_to_command_buffer(uint32_t pipeline_index,
   const VkCommandBuffer* command_buffer);
 
 /**
@@ -164,7 +164,7 @@ int vkz_bind_pipeline_to_command_buffer(uint32_t pipeline_index,
  * @param command_buffer Pointer to the command buffer.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_end_draw_command_buffer(VkCommandBuffer* command_buffer);
+int vh_end_draw_command_buffer(VkCommandBuffer* command_buffer);
 
 /**
  * @brief Destroy a command buffer.
@@ -172,25 +172,25 @@ int vkz_end_draw_command_buffer(VkCommandBuffer* command_buffer);
  * @param command_buffer Pointer to the command buffer.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_destroy_draw_command_buffer(VkCommandBuffer* command_buffer);
+int vh_destroy_draw_command_buffer(VkCommandBuffer* command_buffer);
 
 /**
  * @brief Create sync objects 
  * @return 1 if successful, 0 otherwise
  */
-int vkz_create_sync_objects(void);
+int vh_create_sync_objects(void);
 
 /**
  * @brief Destroy sync objects
  * @return 1 if successful, 0 otherwise
  */
-int vkz_destroy_sync_objects(void);
+int vh_destroy_sync_objects(void);
 
 /**
  * @brief Recreate the swapchain and the pipelines.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_recreate_pipelines_and_swapchain(void);
+int vh_recreate_pipelines_and_swapchain(void);
 
 /**
  * @brief Acquire next swapchain image
@@ -200,22 +200,22 @@ int vkz_recreate_pipelines_and_swapchain(void);
  * @param frame_index_out [out] The frame index (used for async rendering - different from image_index)
  * @return 1 if successful, 0 otherwise
  */
-int vkz_acquire_next_image(uint32_t pipeline_index, uint32_t* image_index, uint32_t* frame_index_out);
+int vh_acquire_next_image(uint32_t pipeline_index, uint32_t* image_index, uint32_t* frame_index_out);
 
 /**
  * @brief Present next swapchain image (the one acquired by
- *        vkz_acquire_next_image())
+ *        vh_acquire_next_image())
  * @return 1 if successful, 0 otherwise
  */
-int vkz_present_next_image(void);
+int vh_present_next_image(void);
 
 /**
  * @brief  Send draw commands (will take effect on the current pipeline image
- *         acquired by vkz_acquire_next_image())
+ *         acquired by vh_acquire_next_image())
  * @param  command_buffer Pointer to the command buffer containing the commands.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_draw(VkCommandBuffer* command_buffer);
+int vh_draw(VkCommandBuffer* command_buffer);
 
 /**
  * @brief  Create a buffer
@@ -226,7 +226,7 @@ int vkz_draw(VkCommandBuffer* command_buffer);
  * @param  memory_property_flags Vulkan properties of the reserved memory
  * @return 1 if successful, 0 otherwise
  */
-int vkz_create_buffer(VkBuffer* buffer,
+int vh_create_buffer(VkBuffer* buffer,
   VkBufferUsageFlags buffer_usage_flags,
   uint32_t buffer_size,
   VkDeviceMemory* memory,
@@ -239,7 +239,7 @@ int vkz_create_buffer(VkBuffer* buffer,
  *               to be released
  * @return 1 if successful, 0 otherwise
  */
-int vkz_destroy_buffer(VkBuffer buffer, VkDeviceMemory memory);
+int vh_destroy_buffer(VkBuffer buffer, VkDeviceMemory memory);
 
 /**
  * @brief Copy a buffer to another
@@ -248,7 +248,7 @@ int vkz_destroy_buffer(VkBuffer buffer, VkDeviceMemory memory);
  * @param size           The size of the buffer to be copied, in bytes
  * @return 1 if successful, 0 otherwise
  */
-int vkz_copy_buffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
+int vh_copy_buffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
 
 /**
  * @brief Create a Vulkan image
@@ -262,7 +262,7 @@ int vkz_copy_buffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
  * @param memory_property_flags Vulkan properties of the reserved memory
  * @return 1 if successful, 0 otherwise
  */
-int vkz_create_image(VkImage* image,
+int vh_create_image(VkImage* image,
   uint32_t image_width, uint32_t image_height,
   VkFormat image_format, VkImageTiling image_tiling,
   VkImageUsageFlags image_usage_flags,
@@ -276,7 +276,7 @@ int vkz_create_image(VkImage* image,
  *                     to be released
  * @return 1 if successful, 0 otherwise
  */
-int vkz_destroy_image(VkImage image, VkDeviceMemory image_memory);
+int vh_destroy_image(VkImage image, VkDeviceMemory image_memory);
 
 /**
  * @brief Transition the layout of a Vulkan image
@@ -286,7 +286,7 @@ int vkz_destroy_image(VkImage image, VkDeviceMemory image_memory);
  * @param new_layout     The new layout
  * @return 1 if successful, 0 otherwise
  */
-int vkz_transition_image_layout(VkImage image, VkFormat format,
+int vh_transition_image_layout(VkImage image, VkFormat format,
   VkImageLayout old_layout,
   VkImageLayout new_layout);
 
@@ -298,7 +298,7 @@ int vkz_transition_image_layout(VkImage image, VkFormat format,
  * @param height The height of the image
  * @return 1 if successful, 0 otherwise
  */
-int vkz_copy_buffer_to_image(VkBuffer buffer, VkImage image,
+int vh_copy_buffer_to_image(VkBuffer buffer, VkImage image,
   uint32_t width, uint32_t height);
 
 /**
@@ -309,7 +309,7 @@ int vkz_copy_buffer_to_image(VkBuffer buffer, VkImage image,
  * @param aspect_flags The aspect flags (mask) e.g. VK_IMAGE_ASPECT_COLOR_BIT
  * @return 1 if successful, 0 otherwise
  */
-int vkz_create_image_view(VkImageView* image_view, VkImage image,
+int vh_create_image_view(VkImageView* image_view, VkImage image,
   VkFormat format, VkImageAspectFlags aspect_flags);
 
 /**
@@ -317,13 +317,13 @@ int vkz_create_image_view(VkImageView* image_view, VkImage image,
  * @param sampler The sampler to be created
  * @return 1 if successful, 0 otherwise
  */
-int vkz_create_sampler(VkSampler* sampler);
+int vh_create_sampler(VkSampler* sampler);
 
 /**
  * @brief  Cleanup the memory, destroy any debug callbacks, as well as the
  *         logical device and the Vulkan instance.
  * @return 1 if successful, 0 otherwise
  */
-int vkz_shutdown(void);
+int vh_shutdown(void);
 
-#endif //VKZOS_H
+#endif //VULKAN_HELPER_H
