@@ -95,7 +95,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
       vkCmdDrawIndexed(command_buffer[current_frame_index], 6, 1, 0, 0, 0);
       vh_end_draw_command_buffer(&command_buffer[current_frame_index]);
     }
-    vh_draw(&command_buffer[current_frame_index]);
+    vh_draw(&command_buffer[current_frame_index], 0);
     vh_present_next_image();
 
     break;

@@ -3,8 +3,25 @@
  * @brief Vulkan helper functions.
  *
  * Created on: 2018/05/01
- *     Author: Dimitri Kourkoulis
- *     License: MIT (see LICENSE file)
+ * License: MIT
+ * Copyright 2017 - 2022 Dimitri Kourkoulis
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #ifndef VULKAN_HELPER_H
 #define VULKAN_HELPER_H
@@ -12,8 +29,8 @@
 #ifdef __ANDROID__
 #include <android_native_app_glue.h>
 #include <android/asset_manager.h>
+
 #define VK_USE_PLATFORM_ANDROID_KHR
-extern struct android_app *vh_android_app;
 #endif
 
 #ifdef VULKAN_HELPER_IOS
@@ -22,10 +39,21 @@ extern struct android_app *vh_android_app;
 #include <vulkan/vulkan.h>
 #endif
 
+#ifdef SMALL3D_USING_XCODE
+// Needed for compiling within Xcode (see extern "C" at the top of the file)
+extern "C" {
+#endif
+  
+/**
+ * @brief Has a pipeline just been created or recreated?
+ */
+
+extern uint32_t vh_new_pipeline_state;
+
 /**
  * @brief The Vulkan instance
  */
- extern VkInstance vh_instance;
+extern VkInstance vh_instance;
 
 /**
  * @brief The surface on which graphics will be presented.
@@ -59,8 +87,30 @@ extern uint32_t vh_swapchain_image_count;
 extern VkClearColorValue vh_clear_colour;
 
 /**
+ * @brief The image used for shadow mapping.
+ */
+extern VkImage vh_shadow_image;
+
+/**
+ * @brief The image memory used for shadow mapping.
+ */
+extern VkDeviceMemory vh_shadow_image_memory;
+
+/**
+ * @brief The image view used for shadow mapping.
+ */
+extern VkImageView vh_shadow_image_view;
+
+extern VkCommandBuffer cmd_buffer_copy_depth_to_shadow;
+
+/**
+ * @brief Copy the depth image to the shadow image.
+ */
+int vh_copy_depth_to_shadow_image();
+
+/**
  * @brief Wait on a GPU-CPU fence
- * @param The GPU-CPU fence index
+ * @param idx The GPU-CPU fence index
  */
 void vh_wait_gpu_cpu_fence(uint32_t idx);
 
@@ -72,8 +122,16 @@ void vh_wait_gpu_cpu_fence(uint32_t idx);
  * @return 1 if successful, 0 otherwise
  */
 int vh_create_instance(const char* application_name,
-  const char** enabled_extension_names,
-  size_t enabled_extension_count);
+                       const char** enabled_extension_names,
+                       size_t enabled_extension_count);
+
+/**
+ * @brief  Clear the depth image.
+ * @param  command_buffer The command buffer to record the clearing command to
+ * @return 1 if successful, 0 otherwise
+ */
+int vh_clear_depth_image(VkCommandBuffer* command_buffer);
+
 /**
  * @brief  Initialise. Internally this means create physical device, select queue
  *         families and create logical device.
@@ -131,8 +189,8 @@ int vh_destroy_swapchain(void);
  * @return      1 if successful, 0 otherwise
  */
 int vh_create_pipeline(const char* vertex_shader_path, const char* fragment_shader_path,
-  int (*set_input_state)(VkPipelineVertexInputStateCreateInfo*),
-  int (*set_pipeline_layout)(VkPipelineLayoutCreateInfo*), uint32_t* index);
+                       int (*set_input_state)(VkPipelineVertexInputStateCreateInfo*),
+                       int (*set_pipeline_layout)(VkPipelineLayoutCreateInfo*), uint32_t* index);
 
 /**
  * @brief Destroy a pipeline
@@ -156,7 +214,7 @@ int vh_begin_draw_command_buffer(VkCommandBuffer* command_buffer);
  * @return 1 if successful, 0 otherwise
  */
 int vh_bind_pipeline_to_command_buffer(uint32_t pipeline_index,
-  const VkCommandBuffer* command_buffer);
+                                       const VkCommandBuffer* command_buffer);
 
 /**
  * @brief Finish recording a command buffer.
@@ -213,9 +271,10 @@ int vh_present_next_image(void);
  * @brief  Send draw commands (will take effect on the current pipeline image
  *         acquired by vh_acquire_next_image())
  * @param  command_buffer Pointer to the command buffer containing the commands.
+ * @param  only_shadows Only drawing shadows?
  * @return 1 if successful, 0 otherwise
  */
-int vh_draw(VkCommandBuffer* command_buffer);
+int vh_draw(VkCommandBuffer* command_buffer, int only_shadows);
 
 /**
  * @brief  Create a buffer
@@ -227,10 +286,10 @@ int vh_draw(VkCommandBuffer* command_buffer);
  * @return 1 if successful, 0 otherwise
  */
 int vh_create_buffer(VkBuffer* buffer,
-  VkBufferUsageFlags buffer_usage_flags,
-  uint32_t buffer_size,
-  VkDeviceMemory* memory,
-  VkMemoryPropertyFlags memory_property_flags);
+                     VkBufferUsageFlags buffer_usage_flags,
+                     uint32_t buffer_size,
+                     VkDeviceMemory* memory,
+                     VkMemoryPropertyFlags memory_property_flags);
 
 /**
  * @brief  Destroy a buffer
@@ -263,11 +322,11 @@ int vh_copy_buffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
  * @return 1 if successful, 0 otherwise
  */
 int vh_create_image(VkImage* image,
-  uint32_t image_width, uint32_t image_height,
-  VkFormat image_format, VkImageTiling image_tiling,
-  VkImageUsageFlags image_usage_flags,
-  VkDeviceMemory* memory,
-  VkMemoryPropertyFlags memory_property_flags);
+                    uint32_t image_width, uint32_t image_height,
+                    VkFormat image_format, VkImageTiling image_tiling,
+                    VkImageUsageFlags image_usage_flags,
+                    VkDeviceMemory* memory,
+                    VkMemoryPropertyFlags memory_property_flags);
 
 /**
  * @brief Destroy a Vulkan image
@@ -284,11 +343,13 @@ int vh_destroy_image(VkImage image, VkDeviceMemory image_memory);
  * @param format         The image format
  * @param old_layout     The old layout
  * @param new_layout     The new layout
+ * @param only_depth     Only a depth image?
  * @return 1 if successful, 0 otherwise
  */
 int vh_transition_image_layout(VkImage image, VkFormat format,
-  VkImageLayout old_layout,
-  VkImageLayout new_layout);
+                               VkImageLayout old_layout,
+                               VkImageLayout new_layout,
+                               int only_depth);
 
 /**
  * @brief Copy a buffer to an image
@@ -299,7 +360,7 @@ int vh_transition_image_layout(VkImage image, VkFormat format,
  * @return 1 if successful, 0 otherwise
  */
 int vh_copy_buffer_to_image(VkBuffer buffer, VkImage image,
-  uint32_t width, uint32_t height);
+                            uint32_t width, uint32_t height);
 
 /**
  * @brief Create a Vulkan image view
@@ -310,14 +371,26 @@ int vh_copy_buffer_to_image(VkBuffer buffer, VkImage image,
  * @return 1 if successful, 0 otherwise
  */
 int vh_create_image_view(VkImageView* image_view, VkImage image,
-  VkFormat format, VkImageAspectFlags aspect_flags);
+                         VkFormat format, VkImageAspectFlags aspect_flags);
 
 /**
  * @brief Create a Vulkan sampler
  * @param sampler The sampler to be created
  * @return 1 if successful, 0 otherwise
  */
-int vh_create_sampler(VkSampler* sampler);
+int vh_create_sampler(VkSampler* sampler, VkSamplerAddressMode addressMode);
+
+/**
+ * @brief Create command buffer that copies depth to
+ *        shadow image.
+ */
+int vh_create_depth_to_shadow_copy_cmd();
+
+/**
+* @brief Destroy command buffer that copies depth to
+*        shadow image.
+*/
+int vh_destroy_depth_to_shadow_copy_cmd();
 
 /**
  * @brief  Cleanup the memory, destroy any debug callbacks, as well as the
@@ -325,5 +398,10 @@ int vh_create_sampler(VkSampler* sampler);
  * @return 1 if successful, 0 otherwise
  */
 int vh_shutdown(void);
+
+#ifdef SMALL3D_USING_XCODE  
+// Needed for compiling within Xcode (see extern "C" at the top of the file)
+}
+#endif
 
 #endif //VULKAN_HELPER_H
