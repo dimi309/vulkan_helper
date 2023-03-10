@@ -1,10 +1,14 @@
 var searchData=
 [
-  ['vkz_5fclear_5fcolour_70',['vkz_clear_colour',['../vkzos_8h.html#a15aa36bf5aaa3c4e44b236c9eb98e634',1,'vkzos.c']]],
-  ['vkz_5finstance_71',['vkz_instance',['../vkzos_8h.html#ad0279a86c08897a13cc85b0c35b5a72e',1,'vkzos.c']]],
-  ['vkz_5flogical_5fdevice_72',['vkz_logical_device',['../vkzos_8h.html#a81a8dd4066651194d34a73f25c9cc3b8',1,'vkzos.c']]],
-  ['vkz_5fphysical_5fdevice_73',['vkz_physical_device',['../vkzos_8h.html#ae613ef4aa20d05a6c7a3246ceaeb8e5a',1,'vkzos.c']]],
-  ['vkz_5fpipeline_5flayout_74',['vkz_pipeline_layout',['../vkzos_8h.html#a497cab2d9e5c7ae0173b26e788efd051',1,'vkzos.c']]],
-  ['vkz_5fsurface_75',['vkz_surface',['../vkzos_8h.html#ae0d51c9f83acb388c4f9dbf357e74d07',1,'vkzos.c']]],
-  ['vkz_5fswapchain_5fimage_5fcount_76',['vkz_swapchain_image_count',['../vkzos_8h.html#ac48c41837c8f16590c36c8b2133f8acd',1,'vkzos.c']]]
+  ['vh_5fclear_5fcolour_82',['vh_clear_colour',['../vulkan__helper_8h.html#ac915f71a2d3b37171b6bec59bf7d419b',1,'vulkan_helper.c']]],
+  ['vh_5finstance_83',['vh_instance',['../vulkan__helper_8h.html#a11936e3f9309bdabada2e6200b2d4c9f',1,'vulkan_helper.c']]],
+  ['vh_5flogical_5fdevice_84',['vh_logical_device',['../vulkan__helper_8h.html#a7e2ecd7eee5d0495afe89232fd963fda',1,'vulkan_helper.c']]],
+  ['vh_5fnew_5fpipeline_5fstate_85',['vh_new_pipeline_state',['../vulkan__helper_8h.html#ab676a5783afd3f7da7b6c27da7af31bc',1,'vulkan_helper.c']]],
+  ['vh_5fphysical_5fdevice_86',['vh_physical_device',['../vulkan__helper_8h.html#a0300cb861babe97af5effdd74676ccf3',1,'vulkan_helper.c']]],
+  ['vh_5fpipeline_5flayout_87',['vh_pipeline_layout',['../vulkan__helper_8h.html#a953a36e488b4c943ed444872697d4d32',1,'vulkan_helper.c']]],
+  ['vh_5fshadow_5fimage_88',['vh_shadow_image',['../vulkan__helper_8h.html#a289b1c0e48afb9f36291bdbfa19d9f06',1,'vulkan_helper.c']]],
+  ['vh_5fshadow_5fimage_5fmemory_89',['vh_shadow_image_memory',['../vulkan__helper_8h.html#a2ff67f39047a777fe11e9b7f37dc5a32',1,'vulkan_helper.c']]],
+  ['vh_5fshadow_5fimage_5fview_90',['vh_shadow_image_view',['../vulkan__helper_8h.html#add16347f98a088b167c6f9e593016fe0',1,'vulkan_helper.c']]],
+  ['vh_5fsurface_91',['vh_surface',['../vulkan__helper_8h.html#abedac1c83a59e82ab4de4c06d1905921',1,'vulkan_helper.c']]],
+  ['vh_5fswapchain_5fimage_5fcount_92',['vh_swapchain_image_count',['../vulkan__helper_8h.html#aa925afc00cd1e2801608acd1df5cb471',1,'vulkan_helper.c']]]
 ];

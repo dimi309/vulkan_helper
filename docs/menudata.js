@@ -32,5 +32,6 @@ var menudata={children:[
 {text:"File Members",url:"globals.html",children:[
 {text:"All",url:"globals.html",children:[
 {text:"v",url:"globals.html#index_v"}]},
-{text:"Functions",url:"globals_func.html"},
+{text:"Functions",url:"globals_func.html",children:[
+{text:"v",url:"globals_func.html#index_v"}]},
 {text:"Variables",url:"globals_vars.html"}]}]}]}
