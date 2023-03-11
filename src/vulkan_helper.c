@@ -1239,6 +1239,7 @@ long alloc_load_shader_spv(char* path, uint32_t** spv) {
   AAsset_close(asset);
   *spv = (uint32_t*)buffer;
 #else
+  LOGDEBUG0("Opening file...");
   FILE* f = 0;
   f = fopen(path, "rb");
   if (f) {
@@ -1260,7 +1261,7 @@ long alloc_load_shader_spv(char* path, uint32_t** spv) {
     return 0;
   }
 #endif
-
+  LOGDEBUG0("Shader loaded.");
   return fs;
 }
 
