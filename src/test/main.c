@@ -160,13 +160,6 @@ int CALLBACK wWinMain(
   createRectangle(-0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f,
     vertexData, indexData, textureCoordsData);
 
-
-  const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
-
-  if (!vh_create_instance("title", extensions, 2)) {
-    MessageBox(NULL, "Failed to create Vulkan instance", "Error", MB_OK);
-  }
-
   WNDCLASSEXW windowClass;
   memset(&windowClass, 0, sizeof(WNDCLASSEXW));
   windowClass.cbSize = sizeof(WNDCLASSEX);
@@ -203,16 +196,7 @@ int CALLBACK wWinMain(
   HWND hWnd = CreateWindowExW(0, L"vkzos test", L"vkzos test", WS_OVERLAPPEDWINDOW, windowX, windowY,
     windowWidth, windowHeight, NULL, NULL, hInstance, NULL);
 
-  VkWin32SurfaceCreateInfoKHR createInfo;
-  memset(&createInfo, 0, sizeof(VkWin32SurfaceCreateInfoKHR));
-  createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-  createInfo.pNext = NULL;
-  createInfo.hinstance = hInstance;
-  createInfo.hwnd = hWnd;
-  if (vkCreateWin32SurfaceKHR(vh_instance, &createInfo, NULL, &vh_surface) != VK_SUCCESS) {
-    MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
-    return 1;
-  }
+  vh_create_instance_and_surface_win32("Vulkan Helper Test", hInstance, hWnd);
 
   if (!vh_init(NUM_FRAMES_IN_FLIGHT)) {
     MessageBox(NULL, "Failed to initialise Vulkan", "Error", MB_OK);

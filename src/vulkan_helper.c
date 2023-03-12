@@ -28,6 +28,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#ifdef _WIN32
+#include <vulkan\vulkan_win32.h>
+#endif
+
+
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
@@ -374,6 +379,29 @@ int vh_create_instance(const char* application_name,
 
   return success;
 }
+
+#ifdef _WIN32
+int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE hInstance, HWND hWnd) {
+  const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+
+  if (!vh_create_instance(application_name, extensions, 2)) {
+    MessageBox(NULL, "Failed to create Vulkan instance", "Error", MB_OK);
+    return 0;
+  }
+
+  VkWin32SurfaceCreateInfoKHR createInfo;
+  memset(&createInfo, 0, sizeof(VkWin32SurfaceCreateInfoKHR));
+  createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+  createInfo.pNext = NULL;
+  createInfo.hinstance = hInstance;
+  createInfo.hwnd = hWnd;
+  if (vkCreateWin32SurfaceKHR(vh_instance, &createInfo, NULL, &vh_surface) != VK_SUCCESS) {
+    MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
+    return 0;
+  }
+  return 1;
+}
+#endif
 
 int retrieve_swapchain_support_details(VkPhysicalDevice device) {
   memset(&vh_swapchain_support_details.capabilities, 0,
