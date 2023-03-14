@@ -207,7 +207,7 @@ int CALLBACK wWinMain(
   vh_create_sync_objects();
 
   if (!vh_create_swapchain()) {
-    MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
+    MessageBox(NULL, "Failed to create Vulkan swapchain", "Error", MB_OK);
   }
 
   if (!vh_create_pipeline("..\\..\\resources\\shaders\\vertexShader.spv",
