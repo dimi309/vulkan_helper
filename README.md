@@ -1,5 +1,5 @@
-vkzos
------
+vulkan_helper
+-------------
 
 A less onerous way to use the Vulkan API.
 
