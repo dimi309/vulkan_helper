@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.20"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>vkzos: vkzos</title>
+<title>vkzos: vulkan_helper</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -62,13 +62,39 @@ $(function() {
 
 <div class="PageDoc"><div class="header">
   <div class="headertitle">
-<div class="title">vkzos </div>  </div>
+<div class="title">vulkan_helper </div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p><a class="anchor" id="md_README"></a></p>
 <p>A less onerous way to use the Vulkan API.</p>
-<p><a href="https://github.com/dimi309/vkzos">[Source Code]</a> <a href="https://dimi309.github.io/vkzos">[API Documentation]</a> </p>
-</div></div><!-- PageDoc -->
+<p><a href="https://github.com/dimi309/vkzos">[Source Code]</a> <a href="https://dimi309.github.io/vkzos">[API Documentation]</a></p>
+<h1><a class="anchor" id="autotoc_md0"></a>
+Building &amp; Testing</h1>
+<p>Windows: </p><pre class="fragment">cd resources
+cd shaders
+glslangValidator -V fragmentShader.frag -o fragmentShader.spv
+glslangValidator -V vertexShader.vert -o vertexShader.spv
+cd ..
+cd ..
+mkdir build
+cd build
+cmake .. -G"Visual Studio 17 2022"
+cmake --build .
+cd bin
+test.exe
+</pre><p>Linux &amp; MacOS: </p><pre class="fragment">cd resources
+cd shaders
+glslangValidator -V fragmentShader.frag -o fragmentShader.spv
+glslangValidator -V vertexShader.vert -o vertexShader.spv
+cd ..
+cd ..
+mkdir build
+cd build
+cmake .. 
+cmake --build .
+cd bin
+./test
+</pre> </div></div><!-- PageDoc -->
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
