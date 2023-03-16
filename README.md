@@ -3,7 +3,7 @@ vulkan_helper
 
 A less onerous way to use the Vulkan API.
 
-[[Source Code]](https://github.com/dimi309/vkzos) [[API Documentation]](https://dimi309.github.io/vkzos)
+[[Source Code]](https://github.com/dimi309/vulkan_helper) [[API Documentation]](https://dimi309.github.io/vulkan_helper)
 
 Building & Testing
 ==================
