@@ -29,6 +29,11 @@
 #include <Windows.h>
 #endif
 
+#ifdef __linux__
+#include <xcb/xcb.h>
+#include <xcb/xproto.h>
+#endif
+
 #ifdef __ANDROID__
 #include <android_native_app_glue.h>
 #include <android/asset_manager.h>
@@ -130,16 +135,28 @@ int vh_create_instance(const char* application_name,
 
 #ifdef _WIN32
 /**
- * @brief  Create a vulkan instance with extensions preselected.
+ * @brief  Create a vulkan instance with extensions preselected for Windows.
  *         This function will also create the surface. It does not need
- *         to be created in the client application. This function only works
- *         on Windows for the time being.
+ *         to be created in the client application. 
  * @param  application_name The name of the application that will be using Vulkan
  * @param  hInstance The windows hInstance
  * @param  hWnd The application window handle
  * @return 1 if successful, 0 otherwise
  */
 int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE hInstance, HWND hWnd);
+#endif
+
+#ifdef __linux__
+/**
+ * @brief  Create a vulkan instance with extensions preselected for Linux.
+ *         This function will also create the surface. It does not need
+ *         to be created in the client application. 
+ * @param  application_name The name of the application that will be using Vulkan
+ * @param  connection The xcb connection
+ * @param  window The xcb window
+ * @return 1 if successful, 0 otherwise
+ */
+  int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t *window);
 #endif
 
 

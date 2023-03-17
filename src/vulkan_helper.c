@@ -32,6 +32,9 @@
 #include <vulkan\vulkan_win32.h>
 #endif
 
+#ifdef __linux__
+#include <vulkan/vulkan_xcb.h>
+#endif
 
 typedef int BOOL;
 #define TRUE 1
@@ -397,6 +400,30 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
   createInfo.hwnd = hWnd;
   if (vkCreateWin32SurfaceKHR(vh_instance, &createInfo, NULL, &vh_surface) != VK_SUCCESS) {
     MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
+    return 0;
+  }
+  return 1;
+}
+#endif
+
+#ifdef __linux__
+int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t *window) {
+  const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_XCB_SURFACE_EXTENSION_NAME};
+
+  if (!vh_create_instance(application_name, extensions, 2)) {
+    LOGDEBUG0("Failed to create Vulkan instance");
+    return 0;
+  }
+
+  VkXcbSurfaceCreateInfoKHR createInfo;
+  memset(&createInfo, 0, sizeof(VkXcbSurfaceCreateInfoKHR));
+  createInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+  createInfo.pNext = NULL;
+  createInfo.flags = 0;
+  createInfo.connection = connection;
+  createInfo.window = *window;
+  if (vkCreateXcbSurfaceKHR(vh_instance, &createInfo, NULL, &vh_surface) != VK_SUCCESS) {
+    LOGDEBUG0("Failed to create Vulkan surface");
     return 0;
   }
   return 1;
