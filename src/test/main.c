@@ -10,8 +10,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <conio.h>
-#include <vulkan\vulkan_win32.h>
 #endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <vulkan_helper.h>
