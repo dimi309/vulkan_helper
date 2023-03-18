@@ -36,10 +36,6 @@
 #include <vulkan/vulkan_xcb.h>
 #endif
 
-#ifdef __APPLE__
-#include <MoltenVK/mvk_vulkan.h>
-#endif
-
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
@@ -436,6 +432,25 @@ int vh_create_instance_and_surface_linux(const char* application_name, xcb_conne
 
 #ifdef __APPLE__
   int vh_create_instance_and_surface_macos(const char* application_name, void *view) {
+
+    const char* extensions[] = { "VK_KHR_surface", "VK_MVK_macos_surface", "VK_KHR_portability_enumeration"};
+
+    if (!vh_create_instance(application_name, extensions, 3)) {
+      LOGDEBUG0("Failed to create Vulkan instance");
+      return 0;
+    }
+    
+    VkMacOSSurfaceCreateInfoMVK createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
+    createInfo.pNext = NULL;
+    createInfo.flags = 0;
+    createInfo.pView = view;
+    
+    if (vkCreateMacOSSurfaceMVK(vh_instance, &createInfo, NULL, &vh_surface) != VK_SUCCESS) {
+      LOGDEBUG0("Failed to create Vulkan surface");
+      return 0;
+    }
+    return 1;
   }
 #endif
 

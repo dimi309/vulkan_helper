@@ -41,7 +41,7 @@
 #define VK_USE_PLATFORM_ANDROID_KHR
 #endif
 
-#ifdef VULKAN_HELPER_IOS
+#ifdef __APPLE__
 #include <MoltenVK/mvk_vulkan.h>
 #else
 #include <vulkan/vulkan.h>
