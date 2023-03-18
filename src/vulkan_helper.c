@@ -36,6 +36,10 @@
 #include <vulkan/vulkan_xcb.h>
 #endif
 
+#ifdef __APPLE__
+#include <MoltenVK/mvk_vulkan.h>
+#endif
+
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
@@ -428,6 +432,11 @@ int vh_create_instance_and_surface_linux(const char* application_name, xcb_conne
   }
   return 1;
 }
+#endif
+
+#ifdef __APPLE__
+  int vh_create_instance_and_surface_macos(const char* application_name, void *view) {
+  }
 #endif
 
 int retrieve_swapchain_support_details(VkPhysicalDevice device) {

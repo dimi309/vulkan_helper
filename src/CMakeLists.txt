@@ -4,7 +4,7 @@ file(GLOB TEST_SOURCE_AND_HEADER_FILES test/*.*)
 
 add_library(vulkan_helper ${SOURCE_FILES} ${HEADER_FILES})
 
-target_include_directories(vulkan_helper PUBLIC ${Vulkan_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(vulkan_helper PUBLIC ${Vulkan_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include ${Vulkan_INCLUDE_DIRS}/../../MoltenVK/include)
 
 if(NOT DEFINED ANDROID_PLATFORM)
   target_link_libraries(vulkan_helper PUBLIC ${Vulkan_LIBRARIES})

@@ -159,6 +159,19 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
   int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t *window);
 #endif
 
+#ifdef __APPLE__
+/**
+ * @brief  Create a vulkan instance with extensions preselected for MacOS.
+ *         This function will also create the surface. It does not need
+ *         to be created in the client application. 
+ * @param  application_name The name of the application that will be using Vulkan
+ * @param  view The MacOS view
+ * @return 1 if successful, 0 otherwise
+ */
+  int vh_create_instance_and_surface_macos(const char* application_name, void *view);
+
+#endif
+
 
 /**
  * @brief  Clear the depth image.
