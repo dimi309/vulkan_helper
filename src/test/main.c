@@ -315,9 +315,16 @@ int CALLBACK wWinMain(
 #else
 int main(int argc, char** argv) {
 
-  uint32_t num = 0;
+  VkResult res = 0;
 
-  if (vh_create_instance("title", NULL, num)) {
+#ifdef __APPLE__
+  const char* extensions[] = { "VK_KHR_portability_enumeration" };
+  res = vh_create_instance("title", extensions, 1);
+#else
+  res = vh_create_instance("title", NULL, 0);
+#endif
+  
+  if (res) {
     printf("Ok\n\r");
 
   }
