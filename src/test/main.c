@@ -351,7 +351,7 @@ int main(int argc, char** argv) {
 
   xcb_flush (connection);
 
-  if (!vh_create_instance_and_surface_linux("title", connection, window)) {
+  if (!vh_create_instance_and_surface_linux("title", connection, &window)) {
     printf("Failed to create instance and surface.\n\r");
     return EXIT_FAILURE;
   }

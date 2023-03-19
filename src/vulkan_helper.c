@@ -414,7 +414,7 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
 #endif
 
 #ifdef __linux__
-int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, const xcb_window_t window) {
+int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t *window) {
   const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_XCB_SURFACE_EXTENSION_NAME};
 
   if (!vh_create_instance(application_name, extensions, 2)) {
@@ -428,7 +428,7 @@ int vh_create_instance_and_surface_linux(const char* application_name, xcb_conne
   createInfo.pNext = NULL;
   createInfo.flags = 0;
   createInfo.connection = connection;
-  createInfo.window = window;
+  createInfo.window = *window;
   if (vkCreateXcbSurfaceKHR(vh_instance, &createInfo, NULL, &vh_surface) != VK_SUCCESS) {
     LOGDEBUG0("Failed to create Vulkan surface");
     return 0;
