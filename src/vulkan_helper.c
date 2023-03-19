@@ -36,6 +36,10 @@
 #include <vulkan/vulkan_xcb.h>
 #endif
 
+#ifdef __APPLE__
+#include "vulkan_helper_macos.h"
+#endif
+
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
@@ -439,6 +443,8 @@ int vh_create_instance_and_surface_linux(const char* application_name, xcb_conne
       LOGDEBUG0("Failed to create Vulkan instance");
       return 0;
     }
+
+    assignMetalLayer(view);
     
     VkMacOSSurfaceCreateInfoMVK createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
