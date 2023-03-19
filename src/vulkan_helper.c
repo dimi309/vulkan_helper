@@ -2003,7 +2003,7 @@ int vh_acquire_next_image(uint32_t pipeline_index, uint32_t* image_index, uint32
       LOGDEBUG0("VK_ERROR_OUT_OF_DATE_KHR while presenting next image");
       vh_recreate_pipelines_and_swapchain();
     }
-#if !defined(__ANDROID__)
+#if !defined(__ANDROID__) && !defined(__APPLE__)
     else if (r == VK_SUBOPTIMAL_KHR) {
       LOGDEBUG0("VK_SUBOPTIMAL_KHR while presenting next image");
       vh_recreate_pipelines_and_swapchain();
