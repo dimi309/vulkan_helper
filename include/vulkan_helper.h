@@ -156,7 +156,7 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
  * @param  window The xcb window
  * @return 1 if successful, 0 otherwise
  */
-  int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t *window);
+  int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t window);
 #endif
 
 #ifdef __APPLE__
