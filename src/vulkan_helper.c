@@ -406,6 +406,9 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
     MessageBox(NULL, "Failed to create Vulkan surface", "Error", MB_OK);
     return 0;
   }
+  else {
+    LOGDEBUG0("Created Vulkan surface");
+  }
   return 1;
 }
 #endif
@@ -429,6 +432,9 @@ int vh_create_instance_and_surface_linux(const char* application_name, xcb_conne
   if (vkCreateXcbSurfaceKHR(vh_instance, &createInfo, NULL, &vh_surface) != VK_SUCCESS) {
     LOGDEBUG0("Failed to create Vulkan surface");
     return 0;
+  }
+  else {
+    LOGDEBUG0("Created Vulkan surface");
   }
   return 1;
 }

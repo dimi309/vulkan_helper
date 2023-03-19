@@ -17,6 +17,12 @@
 #include <vulkan_helper.h>
 #include <assert.h>
 
+#ifdef __linux__
+#include <unistd.h>   // for pause()
+#include <xcb/xcb.h>
+#define XCB_EVENT_RESPONSE_TYPE_MASK (0x7f)
+#endif
+
 #include "rectangle.h"
 
 #ifdef _MSC_VER
@@ -315,14 +321,66 @@ int CALLBACK wWinMain(
 #else
 int main(int argc, char** argv) {
 
+#ifdef __linux__
+
+  /*Open the connection to the X server */
+  xcb_connection_t *connection = xcb_connect (NULL, NULL);
+
+
+  /* Get the first screen */
+  const xcb_setup_t      *setup  = xcb_get_setup (connection);
+  xcb_screen_iterator_t   iter   = xcb_setup_roots_iterator (setup);
+  xcb_screen_t           *screen = iter.data;
+
+
+  /* Create the window */
+  xcb_window_t window = xcb_generate_id (connection);
+  xcb_create_window (connection,                    /* Connection          */
+		     XCB_COPY_FROM_PARENT,          /* depth (same as root)*/
+		     window,                        /* window Id           */
+		     screen->root,                  /* parent window       */
+		     0, 0,                          /* x, y                */
+		     1024, 768,                      /* width, height       */
+		     10,                            /* border_width        */
+		     XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class               */
+		     screen->root_visual,           /* visual              */
+		     0, NULL );                     /* masks, not used yet */
+
+
+  xcb_map_window (connection, window);
+
+  xcb_flush (connection);
+
+  if (!vh_create_instance_and_surface_linux("title", connection, &window)) {
+    printf("Failed to create instance and surface.\n\r");
+    return EXIT_FAILURE;
+  }
+
+  xcb_generic_event_t* event;
+  int done = 0;
+  while (!done && (event = xcb_wait_for_event(connection))) {
+    switch (event->response_type & XCB_EVENT_RESPONSE_TYPE_MASK) {
+    case XCB_EXPOSE: /* draw or redraw the window */
+      //draw
+      xcb_flush(connection);
+      break;
+    case XCB_KEY_RELEASE: /* exit on key release */
+      done = 1;
+      break;
+    }
+    free(event);
+  }
+
+  xcb_disconnect (connection);
+
+  return EXIT_SUCCESS;
+
+#else // Apple
+  
   VkResult res = 0;
 
-#ifdef __APPLE__
   const char* extensions[] = { "VK_KHR_portability_enumeration" };
   res = vh_create_instance("title", extensions, 1);
-#else
-  res = vh_create_instance("title", NULL, 0);
-#endif
   
   if (res) {
     printf("Ok\n\r");
@@ -332,5 +390,6 @@ int main(int argc, char** argv) {
     printf("Failed\n\r");
   }
   return EXIT_SUCCESS;
+#endif
 }
 #endif
