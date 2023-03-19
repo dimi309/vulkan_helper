@@ -34,12 +34,11 @@ if(VULKAN_HELPER_TESTS)
 
   target_include_directories(test PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
-  target_link_libraries(test PUBLIC vulkan_helper xcb xcb-randr)
+  target_link_libraries(test PUBLIC vulkan_helper)
   
-  if(LINUX)
+  if(UNIX AND NOT APPLE)
     target_link_libraries(test PUBLIC xcb xcb-randr)
   endif()
-
   
   if(APPLE) # MacOS
     set_target_properties(test PROPERTIES LINK_FLAGS "-framework QuartzCore")
