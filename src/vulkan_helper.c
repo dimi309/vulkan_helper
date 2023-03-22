@@ -33,7 +33,9 @@
 #endif
 
 #ifdef __linux__
+#ifndef __ANDROID__
 #include <vulkan/vulkan_xcb.h>
+#endif
 #endif
 
 #ifdef __APPLE__
@@ -46,7 +48,7 @@ typedef int BOOL;
 
 #ifdef __ANDROID__
 #include <android/log.h>
-#include "small3d_android.h"
+#include "vulkan_helper_android.h"
 #endif
 
 #ifndef NDEBUG
@@ -414,6 +416,7 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
 #endif
 
 #ifdef __linux__
+#ifndef __ANDROID__
 int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t *window) {
   const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_XCB_SURFACE_EXTENSION_NAME};
 
@@ -438,6 +441,7 @@ int vh_create_instance_and_surface_linux(const char* application_name, xcb_conne
   }
   return 1;
 }
+#endif
 #endif
 
 #ifdef __APPLE__

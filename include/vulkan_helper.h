@@ -30,8 +30,10 @@
 #endif
 
 #ifdef __linux__
+#ifndef __ANDROID__
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
+#endif
 #endif
 
 #ifdef __ANDROID__
@@ -147,6 +149,7 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
 #endif
 
 #ifdef __linux__
+#ifndef __ANDROID__
 /**
  * @brief  Create a vulkan instance with extensions preselected for Linux.
  *         This function will also create the surface. It does not need
@@ -157,6 +160,7 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
  * @return 1 if successful, 0 otherwise
  */
   int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t *window);
+#endif
 #endif
 
 #ifdef __APPLE__
