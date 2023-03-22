@@ -4,8 +4,17 @@ else()
   file(GLOB SOURCE_FILES *.c)
 endif()
 
-
 file(GLOB HEADER_FILES ${CMAKE_SOURCE_DIR}/include/*.h)
+
+if(NOT DEFINED ANDROID_PLATFORM)
+  list(REMOVE_ITEM SOURCE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/vulkan_helper_android.c)
+  list(REMOVE_ITEM HEADER_FILES ${CMAKE_SOURCE_DIR}/include/vulkan_helper_android.h)
+endif()
+
+if(NOT APPLE)
+  list(REMOVE_ITEM HEADER_FILES ${CMAKE_SOURCE_DIR}/include/vulkan_helper_macos.h)
+endif()
+
 file(GLOB TEST_SOURCE_AND_HEADER_FILES test/*.*)
 
 add_library(vulkan_helper ${SOURCE_FILES} ${HEADER_FILES})
@@ -43,6 +52,5 @@ if(VULKAN_HELPER_TESTS)
   if(APPLE) # MacOS
     set_target_properties(test PROPERTIES LINK_FLAGS "-framework QuartzCore")
   endif()
-
   
 endif()
