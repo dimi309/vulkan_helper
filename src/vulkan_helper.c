@@ -39,7 +39,9 @@
 #endif
 
 #ifdef __APPLE__
+#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_MACCATALYST && !TARGET_OS_IPHONE
 #include "vulkan_helper_macos.h"
+#endif
 #endif
 
 typedef int BOOL;
@@ -445,6 +447,7 @@ int vh_create_instance_and_surface_linux(const char* application_name, xcb_conne
 #endif
 
 #ifdef __APPLE__
+#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_MACCATALYST && !TARGET_OS_IPHONE
   int vh_create_instance_and_surface_macos(const char* application_name, void *view) {
 
     const char* extensions[] = { "VK_KHR_surface", "VK_MVK_macos_surface", "VK_KHR_portability_enumeration"};
@@ -468,6 +471,7 @@ int vh_create_instance_and_surface_linux(const char* application_name, xcb_conne
     }
     return 1;
   }
+#endif
 #endif
 
 int retrieve_swapchain_support_details(VkPhysicalDevice device) {

@@ -1,4 +1,4 @@
-if(APPLE)
+if(APPLE AND NOT DEFINED PLATFORM)
   file(GLOB SOURCE_FILES *.c *.m)
 else()
   file(GLOB SOURCE_FILES *.c)
@@ -11,7 +11,7 @@ if(NOT DEFINED ANDROID_PLATFORM)
   list(REMOVE_ITEM HEADER_FILES ${CMAKE_SOURCE_DIR}/include/vulkan_helper_android.h)
 endif()
 
-if(NOT APPLE)
+if(NOT APPLE OR DEFINED PLATFORM)
   list(REMOVE_ITEM HEADER_FILES ${CMAKE_SOURCE_DIR}/include/vulkan_helper_macos.h)
 endif()
 

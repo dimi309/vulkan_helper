@@ -45,6 +45,7 @@
 
 #ifdef __APPLE__
 #include <MoltenVK/mvk_vulkan.h>
+#include <TargetConditionals.h>
 #else
 #include <vulkan/vulkan.h>
 #endif
@@ -164,6 +165,7 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
 #endif
 
 #ifdef __APPLE__
+#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_MACCATALYST && !TARGET_OS_IPHONE
 /**
  * @brief  Create a vulkan instance with extensions preselected for MacOS.
  *         This function will also create the surface. It does not need
@@ -173,7 +175,7 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
  * @return 1 if successful, 0 otherwise
  */
   int vh_create_instance_and_surface_macos(const char* application_name, void *view);
-
+#endif
 #endif
 
 
