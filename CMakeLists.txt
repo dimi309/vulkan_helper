@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.0.2)
 
 project(vulkan_helper C)
 
-option(VULKAN_HELPER_TESTS "Build test program" ON)
+option(VH_BUILD_TESTS "Build test program" ON)
+option(VH_NO_NATIVE_INITS "Do not include native initialisation functions" OFF)
 
 if(IOS AND DEFINED ANDROID_PLATFORM)
   message(FATAL_ERROR "Variables defined for both iOS and Android (IOS is set and ANDROID_PLATFORM exists)")
@@ -10,6 +11,10 @@ endif()
 
 if(IOS)
   add_compile_definitions(VULKAN_HELPER_IOS)
+endif()
+
+if(VH_NO_NATIVE_INITS)
+  add_compile_definitions(VULKAN_HELPER_NO_NATIVE)
 endif()
 
 file(COPY "include" DESTINATION ".")

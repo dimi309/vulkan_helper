@@ -29,7 +29,9 @@
 #include <stdint.h>
 
 #ifdef _WIN32
+#ifndef VULKAN_HELPER_NO_NATIVE
 #include <vulkan\vulkan_win32.h>
+#endif
 #endif
 
 #ifdef __linux__
@@ -392,6 +394,7 @@ int vh_create_instance(const char* application_name,
 }
 
 #ifdef _WIN32
+#ifndef VULKAN_HELPER_NO_NATIVE
 int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE hInstance, HWND hWnd) {
   const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
@@ -416,6 +419,8 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
   return 1;
 }
 #endif
+#endif
+  
 
 #ifdef __linux__
 #ifndef __ANDROID__

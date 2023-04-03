@@ -34,7 +34,7 @@ else()
     native_app_glue)
 endif()
 
-if(VULKAN_HELPER_TESTS)
+if(VH_BUILD_TESTS)
   if(MSVC)
     add_executable(test WIN32 ${TEST_SOURCE_AND_HEADER_FILES})
   else()

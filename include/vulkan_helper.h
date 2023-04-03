@@ -26,7 +26,9 @@
 #ifndef VULKAN_HELPER_H
 #define VULKAN_HELPER_H
 #ifdef _WIN32
+#ifndef VULKAN_HELPER_NO_NATIVE
 #include <Windows.h>
+#endif
 #endif
 
 #ifdef __linux__
@@ -137,6 +139,7 @@ int vh_create_instance(const char* application_name,
                        size_t enabled_extension_count);
 
 #ifdef _WIN32
+#ifndef VULKAN_HELPER_NO_NATIVE
 /**
  * @brief  Create a vulkan instance with extensions preselected for Windows.
  *         This function will also create the surface. It does not need
@@ -147,6 +150,7 @@ int vh_create_instance(const char* application_name,
  * @return 1 if successful, 0 otherwise
  */
 int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE hInstance, HWND hWnd);
+#endif
 #endif
 
 #ifdef __linux__
