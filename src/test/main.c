@@ -307,7 +307,11 @@ int CALLBACK wWinMain(
     }
   }
 
-  
+  vkDeviceWaitIdle(vh_logical_device);
+  vh_destroy_buffer(vertex_buffer, vertex_buffer_memory);
+  vh_destroy_buffer(index_buffer, index_buffer_memory);
+  vh_destroy_pipeline(pipeline_index);
+
   vh_destroy_swapchain();
   vh_destroy_sync_objects();
   vh_shutdown();
