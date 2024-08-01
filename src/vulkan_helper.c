@@ -2064,9 +2064,11 @@ int vh_acquire_next_image(uint32_t pipeline_index, uint32_t* image_index, uint32
         vh_new_pipeline_state = 0;
       }
 
-      if (vkQueueSubmit(vh_graphics_queue, 1, &si,
-                        gpu_cpu_fence[frame_index]) != VK_SUCCESS) {
-        LOGDEBUG0("Could not submit draw command buffer!");
+      int ret = vkQueueSubmit(vh_graphics_queue, 1, &si,
+			      gpu_cpu_fence[frame_index]);
+      if (ret != VK_SUCCESS) {
+        LOGDEBUG1("Could not submit draw command buffer! Return code: %d", ret);
+	return 0;
       }
       
       return 1;
