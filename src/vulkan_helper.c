@@ -1572,7 +1572,7 @@ int vh_create_pipeline(const char* vertex_shader_path, const char* fragment_shad
   viewport.y = 0.0f;
   viewport.width = (float)vh_width;
   viewport.height = (float)vh_height;
-  viewport.minDepth = 0.0f;
+  viewport.minDepth = -1.0f;
   viewport.maxDepth = 1.0f;
 
   VkRect2D scissor;
@@ -1676,7 +1676,7 @@ int vh_create_pipeline(const char* vertex_shader_path, const char* fragment_shad
   depth_stencil_ci.depthWriteEnable = VK_TRUE;
   depth_stencil_ci.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
   depth_stencil_ci.depthBoundsTestEnable = VK_FALSE;
-  depth_stencil_ci.minDepthBounds = 0.0f;
+  depth_stencil_ci.minDepthBounds = -1.0f;
   depth_stencil_ci.maxDepthBounds = 1.0f;
   depth_stencil_ci.stencilTestEnable = VK_FALSE;
 
