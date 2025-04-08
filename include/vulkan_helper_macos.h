@@ -1,2 +1,0 @@
-int assignMetalLayer(void* view);
-

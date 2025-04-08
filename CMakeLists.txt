@@ -5,14 +5,6 @@ project(vulkan_helper C)
 option(VH_BUILD_TESTS "Build test program" ON)
 option(VH_NO_NATIVE_INITS "Do not include native initialisation functions" OFF)
 
-if(IOS AND DEFINED ANDROID_PLATFORM)
-  message(FATAL_ERROR "Variables defined for both iOS and Android (IOS is set and ANDROID_PLATFORM exists)")
-endif()
-
-if(IOS)
-  add_compile_definitions(VULKAN_HELPER_IOS)
-endif()
-
 if(VH_NO_NATIVE_INITS)
   add_compile_definitions(VULKAN_HELPER_NO_NATIVE)
 endif()
@@ -33,8 +25,6 @@ if(MSVC)
   set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${PROJECT_BINARY_DIR}/lib")
 endif()
 
-if(NOT IOS) # Linking to MoltenVK explicitly on iOS
 find_package(Vulkan REQUIRED)
-endif()
 
 subdirs(src)
