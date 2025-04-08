@@ -32,25 +32,12 @@
 #endif
 
 #ifdef __linux__
-#ifndef __ANDROID__
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
 #endif
-#endif
 
-#ifdef __ANDROID__
-#include <android_native_app_glue.h>
-#include <android/asset_manager.h>
-
-#define VK_USE_PLATFORM_ANDROID_KHR
-#endif
-
-#ifdef __APPLE__
-#include <MoltenVK/mvk_vulkan.h>
-#include <TargetConditionals.h>
-#else
 #include <vulkan/vulkan.h>
-#endif
+
 
 #ifdef SMALL3D_USING_XCODE
 // Needed for compiling within Xcode (see extern "C" at the top of the file)
@@ -154,7 +141,6 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
 #endif
 
 #ifdef __linux__
-#ifndef __ANDROID__
 /**
  * @brief  Create a vulkan instance with extensions preselected for Linux.
  *         This function will also create the surface. It does not need
@@ -165,22 +151,10 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
  * @return 1 if successful, 0 otherwise
  */
   int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t *window);
-#endif
+
 #endif
 
-#ifdef __APPLE__
-#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_MACCATALYST && !TARGET_OS_IPHONE
-/**
- * @brief  Create a vulkan instance with extensions preselected for MacOS.
- *         This function will also create the surface. It does not need
- *         to be created in the client application. 
- * @param  application_name The name of the application that will be using Vulkan
- * @param  view The MacOS view
- * @return 1 if successful, 0 otherwise
- */
-  int vh_create_instance_and_surface_macos(const char* application_name, void *view);
-#endif
-#endif
+
 
 
 /**

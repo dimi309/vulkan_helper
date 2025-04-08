@@ -35,50 +35,24 @@
 #endif
 
 #ifdef __linux__
-#ifndef __ANDROID__
 #include <vulkan/vulkan_xcb.h>
-#endif
-#endif
-
-#ifdef __APPLE__
-#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_MACCATALYST && !TARGET_OS_IPHONE
-#include "vulkan_helper_macos.h"
-#endif
 #endif
 
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 
-#ifdef __ANDROID__
-#include <android/log.h>
-#include "vulkan_helper_android.h"
-#endif
 
 #ifndef NDEBUG
-#ifdef __ANDROID__
-#define LOGDEBUG0(x) __android_log_write(ANDROID_LOG_DEBUG, "vulkan_helper", x)
-#define LOGDEBUG1(x, y) __android_log_print(ANDROID_LOG_DEBUG, "vulkan_helper", x, y)
-#define LOGDEBUG2(x, y, z) __android_log_print(ANDROID_LOG_DEBUG, "vulkan_helper", x, y, z)
-
-#else
-
 #define LOGDEBUG0(x) printf(x); printf("\n\r")
 #define LOGDEBUG1(x, y) printf(x, y); printf("\n\r")
 #define LOGDEBUG2(x, y, z) printf(x, y, z); printf("\n\r")
-
-#endif
-
 #else
 #define LOGDEBUG0(x)
 #define LOGDEBUG1(x, y) 
 #define LOGDEBUG2(x, y, z)
+#endif
 
-#endif
-#ifdef SMALL3D_USING_XCODE
-// Needed for compiling within Xcode
-extern "C" {
-#endif
   
 #if !defined(NDEBUG)
 uint32_t numValidationLayers = 4; // Set to 5 to enable VK_LAYER_MESA_overlay
@@ -88,11 +62,6 @@ const char* vl[5] = {
   "VK_LAYER_ADRENO_debug",
   "VK_LAYER_IMG_powervr_perf_doc",
   "VK_LAYER_MESA_overlay"
-};
-#elif defined(__ANDROID__) // Hack to make programs not crash on some Adreno GPUs
-uint32_t numValidationLayers = 1;
-const char* vl[1] = {
-  "VK_LAYER_KHRONOS_validation"
 };
 #else
 uint32_t numValidationLayers = 0;
@@ -277,7 +246,7 @@ int vh_create_instance(const char* application_name,
   ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   ci.pApplicationInfo = &ai;
 
-#if !defined(NDEBUG) || defined(__ANDROID__)
+#if !defined(NDEBUG) 
   uint32_t lc = 0;
   VkLayerProperties* lp = NULL;
 
@@ -342,9 +311,7 @@ int vh_create_instance(const char* application_name,
   ci.enabledExtensionCount = enabled_extension_count;
   ci.ppEnabledExtensionNames = enabled_extension_names;
 #endif
-#if defined(__APPLE__)
-  ci.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-#endif
+
   int success = 1;
   VkResult result = vkCreateInstance(&ci, NULL, &vh_instance);
   if (result != VK_SUCCESS) {
@@ -382,7 +349,7 @@ int vh_create_instance(const char* application_name,
 #endif
   }
 
-#if !defined(NDEBUG) || defined(__ANDROID__)
+#if !defined(NDEBUG)
 
   if (lp) {
     free(lp);
@@ -423,7 +390,6 @@ int vh_create_instance_and_surface_win32(const char* application_name, HINSTANCE
   
 
 #ifdef __linux__
-#ifndef __ANDROID__
 int vh_create_instance_and_surface_linux(const char* application_name, xcb_connection_t *connection, xcb_window_t *window) {
   const char* extensions[] = { VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_XCB_SURFACE_EXTENSION_NAME};
 
@@ -449,35 +415,8 @@ int vh_create_instance_and_surface_linux(const char* application_name, xcb_conne
   return 1;
 }
 #endif
-#endif
 
-#ifdef __APPLE__
-#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_MACCATALYST && !TARGET_OS_IPHONE
-  int vh_create_instance_and_surface_macos(const char* application_name, void *view) {
 
-    const char* extensions[] = { "VK_KHR_surface", "VK_MVK_macos_surface", "VK_KHR_portability_enumeration"};
-
-    if (!vh_create_instance(application_name, extensions, 3)) {
-      LOGDEBUG0("Failed to create Vulkan instance");
-      return 0;
-    }
-
-    assignMetalLayer(view);
-    
-    VkMacOSSurfaceCreateInfoMVK createInfo = {};
-    createInfo.sType = VK_STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK;
-    createInfo.pNext = NULL;
-    createInfo.flags = 0;
-    createInfo.pView = view;
-    
-    if (vkCreateMacOSSurfaceMVK(vh_instance, &createInfo, NULL, &vh_surface) != VK_SUCCESS) {
-      LOGDEBUG0("Failed to create Vulkan surface");
-      return 0;
-    }
-    return 1;
-  }
-#endif
-#endif
 
 int retrieve_swapchain_support_details(VkPhysicalDevice device) {
   memset(&vh_swapchain_support_details.capabilities, 0,
@@ -1244,11 +1183,8 @@ int vh_create_swapchain() {
     ci.pQueueFamilyIndices = NULL;
   }
 
-#ifdef __ANDROID__
-  ci.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
-#else
   ci.preTransform = vh_swapchain_support_details.capabilities.currentTransform;
-#endif
+
   const VkCompositeAlphaFlagBitsKHR af[4] = {
     VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
     VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
@@ -1331,18 +1267,7 @@ int vh_destroy_swapchain(void) {
 long alloc_load_shader_spv(char* path, uint32_t** spv) {
   long fs = 0;
   LOGDEBUG1("About to load shader from %s", path);
-#ifdef __ANDROID__
-  AAsset* asset = AAssetManager_open(vh_android_app->activity->assetManager,
-                                     path, AASSET_MODE_STREAMING);
-  if (!asset) {
-    LOGDEBUG1("Could not open file %s!", path);
-    return 0;
-  }
-  fs = AAsset_getLength(asset);
-  const void* buffer = AAsset_getBuffer(asset);
-  AAsset_close(asset);
-  *spv = (uint32_t*)buffer;
-#else
+
   LOGDEBUG0("Opening file...");
   FILE* f = 0;
   f = fopen(path, "rb");
@@ -1364,7 +1289,7 @@ long alloc_load_shader_spv(char* path, uint32_t** spv) {
     LOGDEBUG1("Could not open file %s!", path);
     return 0;
   }
-#endif
+
   LOGDEBUG0("Shader loaded.");
   return fs;
 }
@@ -1714,16 +1639,14 @@ int vh_create_pipeline(const char* vertex_shader_path, const char* fragment_shad
     LOGDEBUG0("Pipeline created ok.");
   }
 
-  // Freeing these when loaded as Android assets makes
-  // the app crash.
-#ifndef __ANDROID__
+  
   if (vertexShader) {
     free(vertexShader);
   }
   if (fragmentShader) {
     free(fragmentShader);
   }
-#endif
+
   vh_new_pipeline_state = 1;
   return 1;
 }
@@ -2022,15 +1945,13 @@ int vh_acquire_next_image(uint32_t pipeline_index, uint32_t* image_index, uint32
       LOGDEBUG0("VK_ERROR_OUT_OF_DATE_KHR while presenting next image");
       vh_recreate_pipelines_and_swapchain();
     }
-#if !defined(__ANDROID__) && !defined(__APPLE__)
+
     else if (r == VK_SUBOPTIMAL_KHR) {
       LOGDEBUG0("VK_SUBOPTIMAL_KHR while presenting next image");
       vh_recreate_pipelines_and_swapchain();
     }
     else if (r != VK_SUCCESS) {
-#else
-      else if (r != VK_SUCCESS && r!= VK_SUBOPTIMAL_KHR) {
-#endif
+
         LOGDEBUG0("Could not present swapchain image!");
         return 0;
       }
@@ -2423,7 +2344,7 @@ int vh_acquire_next_image(uint32_t pipeline_index, uint32_t* image_index, uint32
       sci.maxLod = 0.0f;
       // compareEnable, set to true in commit d151e5f37fd275ac3631e4ddcbe897f1540777cd Feb 8
       // was making textures not appear on Ubuntu / GeForce GTX
-#if defined(__linux__) && !defined(__ANDROID__) && !defined(SMALL3D_IOS)
+#if defined(__linux__)
       sci.compareEnable = VK_FALSE;
 #else
       sci.compareEnable = VK_KHR_portability_subset_supported ? VK_FALSE : VK_TRUE;

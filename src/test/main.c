@@ -379,21 +379,6 @@ int main(int argc, char** argv) {
 
   return EXIT_SUCCESS;
 
-#else // Apple
-  
-  VkResult res = 0;
-
-  const char* extensions[] = { "VK_KHR_portability_enumeration" };
-  res = vh_create_instance("title", extensions, 1);
-  
-  if (res) {
-    printf("Ok\n\r");
-
-  }
-  else {
-    printf("Failed\n\r");
-  }
-  return EXIT_SUCCESS;
 #endif
 }
 #endif
