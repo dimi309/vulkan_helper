@@ -23,7 +23,7 @@ Windows:
 	cd bin
 	test.exe
 	
-Linux & MacOS:
+Linux:
 	
 	cd resources
 	cd shaders
